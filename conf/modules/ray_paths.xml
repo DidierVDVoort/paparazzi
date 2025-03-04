@@ -1,0 +1,24 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="ray_paths">
+  <doc>
+    <description>Color Object Detector
+    Detects an object by a continuous color. Optionally draws on image.
+    </description>
+  </doc>
+
+  <dep>
+    <depends>video_thread</depends>
+  </dep>
+
+  <header>
+    <file name="ray_paths.h"/>
+  </header>
+
+  <init fun="ray_paths_init()"/>
+  <periodic fun="ray_paths_periodic()" freq="50"/>
+  <makefile target="ap|nps">
+    <file name="ray_paths.c"/>
+  </makefile>
+</module>
+
