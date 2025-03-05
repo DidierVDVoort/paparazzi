@@ -107,44 +107,47 @@ void draw_sloped_line(struct image_t *img, float alpha, float entry_point_fracti
   // Loop through half of x-values
   for (uint16_t x = 0; 2*x < img->w; x++) {
     uint8_t *yp, *up, *vp;
-    // uint16_t y = img->h/2;
-    uint16_t y = (uint16_t) roundf(slope * x + img->h * entry_point_fraction);
-    if (y >= img->h) continue;  // Ensure y is within bounds
 
-    // Access the U, Y1, and V values directly
-    if (x % 2 == 0) {
-      // Even x
-      up = &buffer[y * 2 * img->w + 2 * x];      // U
-      yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y1
-      vp = &buffer[y * 2 * img->w + 2 * x + 2];  // V
-      //yp = &buffer[y * 2 * img->w + 2 * x + 3]; // Y2
-    } else {
-      // Uneven x
-      up = &buffer[y * 2 * img->w + 2 * x - 2];  // U
-      //yp = &buffer[y * 2 * img->w + 2 * x - 1]; // Y1
-      vp = &buffer[y * 2 * img->w + 2 * x];      // V
-      yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y2
-    }
+    for (uint16_t offset = 0; offset < 2; offset++) {
+      // Compute the y-value using the slope
+      uint16_t y = (uint16_t) roundf(slope * x + img->h * entry_point_fraction) + offset - 1;
+      if (y >= img->h) continue;  // Ensure y is within bounds
 
-    uint8_t margin = 30;
-    uint8_t lum = 86;
-    uint8_t lum_min = lum - margin;
-    uint8_t lum_max = lum + margin;
-    uint8_t cb = 84;
-    uint8_t cb_min = cb - margin;
-    uint8_t cb_max = cb + margin;
-    uint8_t cr = 122;
-    uint8_t cr_min = cr - margin;
-    uint8_t cr_max = cr + margin;
+      // Access the U, Y1, and V values directly
+      if (x % 2 == 0) {
+        // Even x
+        up = &buffer[y * 2 * img->w + 2 * x];      // U
+        yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y1
+        vp = &buffer[y * 2 * img->w + 2 * x + 2];  // V
+        //yp = &buffer[y * 2 * img->w + 2 * x + 3]; // Y2
+      } else {
+        // Uneven x
+        up = &buffer[y * 2 * img->w + 2 * x - 2];  // U
+        //yp = &buffer[y * 2 * img->w + 2 * x - 1]; // Y1
+        vp = &buffer[y * 2 * img->w + 2 * x];      // V
+        yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y2
+      }
+
+      uint8_t margin = 30;
+      uint8_t lum = 86;
+      uint8_t lum_min = lum - margin;
+      uint8_t lum_max = lum + margin;
+      uint8_t cb = 84;
+      uint8_t cb_min = cb - margin;
+      uint8_t cb_max = cb + margin;
+      uint8_t cr = 122;
+      uint8_t cr_min = cr - margin;
+      uint8_t cr_max = cr + margin;
 
 
-    if ( (*yp >= lum_min) && (*yp <= lum_max) &&
-    (*up >= cb_min ) && (*up <= cb_max ) &&
-    (*vp >= cr_min ) && (*vp <= cr_max )) {
-      *yp = 255;  // make pixel brighter in image
-    }
-    else{
-      *yp = 0;  // Set Y (luminance) to 0 for black pixel
+      if ( (*yp >= lum_min) && (*yp <= lum_max) &&
+      (*up >= cb_min ) && (*up <= cb_max ) &&
+      (*vp >= cr_min ) && (*vp <= cr_max )) {
+        *yp = 255;  // make pixel brighter in image
+      }
+      else{
+        *yp = 0;  // Set Y (luminance) to 0 for black pixel
+      }
     }
   }
 }
