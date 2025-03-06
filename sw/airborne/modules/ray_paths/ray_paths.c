@@ -15,7 +15,7 @@ static pthread_mutex_t mutex;
 float best_angle = 0;
 
 // Function
-int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction);
+int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction, float best_angle);
 
 struct image_t *random_draw1(struct image_t *img, uint8_t camera_id);
 struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute__((unused)))
@@ -34,13 +34,12 @@ struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute_
 
   float entry_point_fractions[] = {0.35f, 0.41f, 0.44f, 0.47f, 0.5f, 0.53f, 0.56f, 0.59f, 0.65f};
   int16_t costs[9];
-
+  float best_angle = 0;
   int16_t min_cost = 32767;
-  best_angle = 0;
+  
 
   for (int i =0; i <9; i++){
-    costs[i] = cost_function(img, angles[i], entry_point_fractions[i]);
-
+    costs[i] = cost_function(img, angles[i], entry_point_fractions[i], best_angle);
     if (costs[i] < min_cost){
       min_cost = costs[i];
       best_angle = angles[i];
@@ -60,23 +59,36 @@ void ray_paths_init(void)
 
 
 
-int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction)
+int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction, float best_angle)
 {
   uint8_t draw = 1;
   int16_t cost = 0;
   uint8_t *buffer = img->buf;
 
   // Definitions of the colour green
-  uint8_t margin = 30;
-  uint8_t lum = 86;
-  uint8_t lum_min = lum - margin;
-  uint8_t lum_max = lum + margin;
-  uint8_t cb = 84;
-  uint8_t cb_min = cb - margin;
-  uint8_t cb_max = cb + margin;
-  uint8_t cr = 122;
-  uint8_t cr_min = cr - margin;
-  uint8_t cr_max = cr + margin;
+  uint8_t margin_gr = 30;
+  uint8_t lum_gr = 86;
+  uint8_t lum_min_gr = lum_gr - margin_gr;
+  uint8_t lum_max_gr = lum_gr + margin_gr;
+  uint8_t cb_gr = 84;
+  uint8_t cb_min_gr = cb_gr - margin_gr;
+  uint8_t cb_max_gr = cb_gr + margin_gr;
+  uint8_t cr_gr = 122;
+  uint8_t cr_min_gr = cr_gr - margin_gr;
+  uint8_t cr_max_gr = cr_gr + margin_gr;
+
+  // Definitions of the colour orange
+  uint8_t margin_or = 40;
+  uint8_t lum_or = 112;
+  uint8_t lum_min_or = lum_or - margin_or;
+  uint8_t lum_max_or = lum_or + margin_or;
+  uint8_t cb_or = 82;
+  uint8_t cb_min_or = cb_or - margin_or;
+  uint8_t cb_max_or = cb_or + margin_or;
+  uint8_t cr_or = 190;
+  uint8_t cr_min_or = cr_or - margin_or;
+  uint8_t cr_max_or = cr_or + margin_or;
+
 
   // x is vertical, y is horizontal
   int16_t num_pixels_line = 0;
@@ -117,28 +129,36 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
           weight = 1;
       }
 
-      // Increase cost when green is close to drone
-      if ( (*yp >= lum_min) && (*yp <= lum_max) &&
-      (*up >= cb_min ) && (*up <= cb_max ) &&
-      (*vp >= cr_min ) && (*vp <= cr_max )) 
+      // Decrease cost when green is close to drone
+      if ( (*yp >= lum_min_gr) && (*yp <= lum_max_gr) &&
+      (*up >= cb_min_gr ) && (*up <= cb_max_gr ) &&
+      (*vp >= cr_min_gr ) && (*vp <= cr_max_gr )) 
       {
         cost -= weight;
-        if (draw) {
-          *yp = 255;
-        }
-      } else {
-        if (draw) {
-          *yp = 0;
-        }
-      }
+      } 
+      
+      // Increase cost when orange is near to drone
+      if ( (*yp >= lum_min_or) && (*yp <= lum_max_or) &&
+      (*up >= cb_min_or ) && (*up <= cb_max_or ) &&
+      (*vp >= cr_min_or ) && (*vp <= cr_max_or )) 
+      {
+        cost += 10*weight;
+      } 
     }
   }
+  // Normalization
+  cost = round(cost * 3* (img->w/2) / num_pixels_line);
 
+  // Prefer going straight over turning
   if (alpha == 0){
-    cost -= 50;
+    cost -= 30;
+  }
+  // Prefer inertia
+  if (alpha == best_angle){
+    cost -= 30;
   }
 
-  cost = round(cost * 3* (img->w/2) / num_pixels_line);
+  
   return cost;
   
 }
