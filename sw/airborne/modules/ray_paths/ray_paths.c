@@ -3,6 +3,7 @@
 #include "modules/computer_vision/cv.h"
 #include "modules/core/abi.h"
 #include "std.h"
+#include <stdint.h>
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -13,19 +14,38 @@
 void random_draw(struct image_t *img);
 void draw_line(struct image_t *img);
 void draw_sloped_line(struct image_t *img, float alpha, float entry_point_fraction);
+int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction);
 
 struct image_t *random_draw1(struct image_t *img, uint8_t camera_id);
 struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute__((unused)))
 {
-  draw_sloped_line(img, -60.f * (float)M_PI / 180.0f, 0.35f);
-  draw_sloped_line(img, -45.f * (float)M_PI / 180.0f, 0.41f);
-  draw_sloped_line(img, -30.f * (float)M_PI / 180.0f, 0.44f);
-  draw_sloped_line(img, -15.f * (float)M_PI / 180.0f, 0.47f);
-  draw_sloped_line(img, 0, 0.5f);
-  draw_sloped_line(img, 15.f * (float)M_PI / 180.0f, 0.53f);
-  draw_sloped_line(img, 30.f * (float)M_PI / 180.0f, 0.56f);
-  draw_sloped_line(img, 45.f * (float)M_PI / 180.0f, 0.59f);
-  draw_sloped_line(img, 60.f * (float)M_PI / 180.0f, 0.65f);
+  float angles[] = {
+    -60.f * (float)M_PI / 180.0f,
+    -45.f * (float)M_PI / 180.0f,
+    -30.f * (float)M_PI / 180.0f,
+    -15.f * (float)M_PI / 180.0f,
+    0,
+    15.f * (float)M_PI / 180.0f,
+    30.f * (float)M_PI / 180.0f,
+    45.f * (float)M_PI / 180.0f,
+    60.f * (float)M_PI / 180.0f
+  };
+
+  float entry_point_fractions[] = {0.35f, 0.41f, 0.44f, 0.47f, 0.5f, 0.53f, 0.56f, 0.59f, 0.65f};
+  int16_t costs[9];
+
+  int max_cost =-1;
+  float best_angle = 0;
+
+  for (int i =0; i <9; i++){
+    costs[i] = cost_function(img, angles[i], entry_point_fractions[i]);
+
+    if (costs[i] > max_cost){
+      max_cost = costs[i];
+      best_angle = angles[i];
+    }
+  }
+  fprintf(stderr, "[random_draw1] Max Cost: %d, Best Angle: %.2f degrees\n", max_cost, best_angle * 180.0f / M_PI);
   
   return img;
 }
@@ -150,6 +170,75 @@ void draw_sloped_line(struct image_t *img, float alpha, float entry_point_fracti
       }
     }
   }
+}
+
+int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction)
+{
+  int16_t cost = 100;
+  uint8_t *buffer = img->buf;
+
+  // Definitions of the colour green
+  uint8_t margin = 30;
+  uint8_t lum = 86;
+  uint8_t lum_min = lum - margin;
+  uint8_t lum_max = lum + margin;
+  uint8_t cb = 84;
+  uint8_t cb_min = cb - margin;
+  uint8_t cb_max = cb + margin;
+  uint8_t cr = 122;
+  uint8_t cr_min = cr - margin;
+  uint8_t cr_max = cr + margin;
+
+  // x is vertical, y is horizontal
+
+  // Compute the slope using the given angle
+  float slope = tan(alpha);
+
+  // Loop through half of x-values
+  for (uint16_t x = 0; 2*x < img->w; x++) {
+    uint8_t *yp, *up, *vp;
+
+    for (uint16_t offset = 0; offset < 2; offset++) {
+      // Compute the y-value using the slope
+      uint16_t y = (uint16_t) roundf(slope * x + img->h * entry_point_fraction) + offset - 1;
+      if (y >= img->h) continue;  // Ensure y is within bounds
+
+      // Access the U, Y1, and V values directly
+      if (x % 2 == 0) {
+        // Even x
+        up = &buffer[y * 2 * img->w + 2 * x];      // U
+        yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y1
+        vp = &buffer[y * 2 * img->w + 2 * x + 2];  // V
+        //yp = &buffer[y * 2 * img->w + 2 * x + 3]; // Y2
+      } else {
+        // Uneven x
+        up = &buffer[y * 2 * img->w + 2 * x - 2];  // U
+        //yp = &buffer[y * 2 * img->w + 2 * x - 1]; // Y1
+        vp = &buffer[y * 2 * img->w + 2 * x];      // V
+        yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y2
+      }
+      
+      uint16_t weight;
+      if (x <= 30) {
+          weight = 3;
+      } else if (x > 30 && x <= 60) {
+          weight = 2;
+      } else {
+          weight = 1;
+      }
+
+      // Increase cost when green is close to drone
+      if ( (*yp >= lum_min) && (*yp <= lum_max) &&
+      (*up >= cb_min ) && (*up <= cb_max ) &&
+      (*vp >= cr_min ) && (*vp <= cr_max )) 
+      {
+        cost += weight;
+      } 
+    }
+  }
+  
+  return cost;
+  
 }
 
 void ray_paths_periodic(void)
