@@ -10,6 +10,10 @@
 #include <math.h>
 #include "pthread.h"
 
+static pthread_mutex_t mutex;
+
+float best_angle = 0;
+
 // Function
 int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction);
 
@@ -32,7 +36,7 @@ struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute_
   int16_t costs[9];
 
   int16_t min_cost = 32767;
-  float best_angle = 0;
+  best_angle = 0;
 
   for (int i =0; i <9; i++){
     costs[i] = cost_function(img, angles[i], entry_point_fractions[i]);
@@ -142,6 +146,6 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
 void ray_paths_periodic(void)
 {
   pthread_mutex_lock(&mutex);
-  AbiSendMsgVISUAL_DETECTION(3, best_angle, 0, 0, 0, 0, 0);
+  AbiSendMsgVISUAL_DETECTION(3, 0, 0, 0, 0, (int32_t)best_angle, 0);
   pthread_mutex_unlock(&mutex);
 }
