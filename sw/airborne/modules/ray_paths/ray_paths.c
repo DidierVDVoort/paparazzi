@@ -174,6 +174,7 @@ void draw_sloped_line(struct image_t *img, float alpha, float entry_point_fracti
 
 int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction)
 {
+  uint8_t draw = 1;
   int16_t cost = 100;
   uint8_t *buffer = img->buf;
 
@@ -233,7 +234,14 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
       (*vp >= cr_min ) && (*vp <= cr_max )) 
       {
         cost += weight;
-      } 
+        if (draw) {
+          *yp = 255;
+        }
+      } else {
+        if (draw) {
+          *yp = 0;
+        }
+      }
     }
   }
   
@@ -243,5 +251,7 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
 
 void ray_paths_periodic(void)
 {
-
+  pthread_mutex_lock(&mutex);
+  AbiSendMsgVISUAL_DETECTION(3, best_angle, 0, 0, 0, 0, 0);
+  pthread_mutex_unlock(&mutex);
 }
