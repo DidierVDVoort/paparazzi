@@ -28,7 +28,7 @@
 #define NAV_C // needed to get the nav functions like Inside...
 #include "generated/flight_plan.h"
 
-#define ORANGE_AVOIDER_VERBOSE TRUE
+#define ORANGE_AVOIDER_VERBOSE FALSE
 
 #define PRINT(string,...) fprintf(stderr, "[orange_avoider->%s()] " string,__FUNCTION__ , ##__VA_ARGS__)
 #if ORANGE_AVOIDER_VERBOSE
@@ -108,7 +108,8 @@ void orange_avoider_periodic(void)
   // VERBOSE_PRINT("Color_count: %d  threshold: %d state: %d \n", color_count, color_count_threshold, navigation_state);
   float moveDistance = 1.f;
 
-  fprintf(stderr, "NAV_STATE: %d, Best Angle: %d degrees\n", navigation_state, heading_setpoint);
+  // fprintf(stderr, "NAV_STATE: %d, Best Angle: %d degrees\n", navigation_state, heading_setpoint);
+  fprintf(stderr, "Heading setpoint: %d\n", heading_setpoint);
 
   switch (navigation_state){
     case SAFE:
@@ -117,8 +118,10 @@ void orange_avoider_periodic(void)
       if (!InsideObstacleZone(WaypointX(WP_TRAJECTORY),WaypointY(WP_TRAJECTORY))){
         navigation_state = OUT_OF_BOUNDS;
       } else if (heading_setpoint > 0){
+        fprintf(stderr, "RIGHT: Heading setpoint: %d\n", heading_setpoint);
         navigation_state = RIGHT;
       } else if (heading_setpoint < 0){
+        fprintf(stderr, "LEFT: Heading setpoint: %d\n", heading_setpoint);
         navigation_state = LEFT;
       } else {
         moveWaypointForward(WP_GOAL, moveDistance);
