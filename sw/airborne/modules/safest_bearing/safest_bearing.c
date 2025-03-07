@@ -31,14 +31,14 @@ void safest_bearing_init(void)
   cv_add_to_device(&COLOR_OBJECT_DETECTOR_CAMERA1, random_draw1, COLOR_OBJECT_DETECTOR_FPS1, 0);
 }
 
-void entry(const float tensor_input_1[1][3][485][224], float tensor_41[1][2]);
+void entry(const float tensor_input_1[1][3][208][96], float tensor_41[1][2]);
 
 void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_max_bearing)
 {
     uint8_t *buffer = img->buf;
 
-    // Prepare tensor input for the entry function, assuming the tensor is [1][3][485][224]
-    float tensor_input_1[1][3][485][224];  // Adjust the size based on your image size
+    // Prepare tensor input for the entry function, assuming the tensor is [1][3][208][96]
+    float tensor_input_1[1][3][208][96];  // Adjust the size based on your image size
     float tensor_41[1][2];
 
     // Convert YUV image to tensor format
@@ -65,22 +65,31 @@ void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_ma
     // Call the entry function with the tensor input
     entry(tensor_input_1, tensor_41);
 
-    float max_bearing = tensor_41[0][0];
-    float min_bearing = tensor_41[0][1];
+    float min_bearing = tensor_41[0][0];
+    float max_bearing = tensor_41[0][1];
+
+    // Ensure min_bearing is non-negative
+    if (min_bearing < 0) {
+        min_bearing = 0;
+    }
+
+    if (max_bearing < 0) {
+        max_bearing = 0;
+    }
 
     // Print the values of min_bearing and max_bearing
     printf("Min Bearing: %f\n", min_bearing);
     printf("Max Bearing: %f\n", max_bearing);
 
     // Convert normalized bearings to pixel locations
-    uint16_t min_y = (uint16_t)((min_bearing / 360.0) * img->h);
-    uint16_t max_y = (uint16_t)((max_bearing / 360.0) * img->h);
+    uint8_t min_y = (uint8_t)(min_bearing * img->h);
+    uint8_t max_y = (uint8_t)(max_bearing * img->h);
 
     // // Convert normalized bearings to pixel locations
     // uint16_t min_y = (uint16_t)(norm_min_bearing * img->h);
     // uint16_t max_y = (uint16_t)(norm_max_bearing * img->h);
 
-    // Green color in YUV
+    // Red color in YUV
     uint8_t y_value = 76;   // Luminance (brightness) for red
     uint8_t u_value = 84;   // U chrominance for red
     uint8_t v_value = 255;  // V chrominance for red
