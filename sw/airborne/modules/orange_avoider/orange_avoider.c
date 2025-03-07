@@ -56,7 +56,7 @@ float oa_color_count_frac = 0.18f;
 // define and initialise global variables
 enum navigation_state_t navigation_state = SAFE;
 int32_t color_count = 0;                // orange color count from color filter for obstacle detection
-float heading_setpoint = 0;
+int32_t heading_setpoint = 0;
 int16_t obstacle_free_confidence = 0;   // a measure of how certain we are that the way ahead is safe.
 float heading_increment = 5.f;          // heading angle increment [deg]
 float maxDistance = 2.25;               // max waypoint displacement [m]
@@ -108,6 +108,8 @@ void orange_avoider_periodic(void)
   // VERBOSE_PRINT("Color_count: %d  threshold: %d state: %d \n", color_count, color_count_threshold, navigation_state);
   float moveDistance = 1.f;
 
+  fprintf(stderr, "NAV_STATE: %d, Best Angle: %d degrees\n", navigation_state, heading_setpoint);
+
   switch (navigation_state){
     case SAFE:
       // Move waypoint forward
@@ -125,13 +127,13 @@ void orange_avoider_periodic(void)
 
       break;
     case RIGHT:
-      increase_nav_heading(heading_increment);
+      increase_nav_heading(heading_setpoint);
       if (heading_setpoint == 0){
         navigation_state = SAFE;
       }
       break;
     case LEFT:
-      increase_nav_heading(-heading_increment);
+      increase_nav_heading(heading_setpoint);
       if (heading_setpoint == 0){
         navigation_state = SAFE;
       }

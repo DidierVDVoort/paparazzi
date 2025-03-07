@@ -45,7 +45,7 @@ struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute_
       best_angle = angles[i];
     }
   }
-  fprintf(stderr, "[random_draw1] Max Cost: %d, Best Angle: %.2f degrees\n", min_cost, best_angle * 180.0f / M_PI);
+  // fprintf(stderr, "[random_draw1] Max Cost: %d, Best Angle: %.2f degrees\n", min_cost, best_angle * 180.0f / M_PI);
   
   return img;
 }
