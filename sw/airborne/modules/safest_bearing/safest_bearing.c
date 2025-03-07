@@ -12,12 +12,15 @@
 #include "pthread.h"
 
 // Function prototype
-void rotate_image_90_counterclockwise(struct image_t *img);
+void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_max_bearing);
 
 struct image_t *random_draw1(struct image_t *img, uint8_t camera_id);
 struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute__((unused)))
 {
-  rotate_image_90_counterclockwise(img);
+  draw_bearing_box(img, 0.3, 0.7);
+
+  
+
   return img;
 }
 
@@ -28,58 +31,151 @@ void safest_bearing_init(void)
   cv_add_to_device(&COLOR_OBJECT_DETECTOR_CAMERA1, random_draw1, COLOR_OBJECT_DETECTOR_FPS1, 0);
 }
 
-void rotate_image_90_counterclockwise(struct image_t *img)
+void entry(const float tensor_input_1[1][3][485][224], float tensor_41[1][2]);
+
+void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_max_bearing)
 {
-    // Assume img->buf is in YUV422 format
-    uint32_t y_plane_size = img->w * img->h;  // Full resolution for Y plane
-    uint32_t uv_plane_size = y_plane_size / 2;  // Half resolution for U and V planes (since they are subsampled)
+    uint8_t *buffer = img->buf;
 
-    // Allocate memory for the rotated image
-    uint8_t *rotated_buffer = (uint8_t*)malloc(y_plane_size + uv_plane_size);
-    if (rotated_buffer == NULL) {
-        fprintf(stderr, "Memory allocation for rotated buffer failed.\n");
-        return;
-    }
+    // Prepare tensor input for the entry function, assuming the tensor is [1][3][485][224]
+    float tensor_input_1[1][3][485][224];  // Adjust the size based on your image size
+    float tensor_41[1][2];
 
-    uint8_t *y_plane = img->buf;                  // Start of Y plane in original buffer
-    uint8_t *uv_plane = img->buf + y_plane_size;  // Start of UV plane in original buffer
+    // Convert YUV image to tensor format
+    for (int y = 0; y < img->h; y++) {
+        for (int x = 0; x < img->w; x++) {
+            uint8_t *yp, *up, *vp;
+            if (x % 2 == 0) {
+                up = &buffer[y * 2 * img->w + 2 * x];      // U
+                yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y1
+                vp = &buffer[y * 2 * img->w + 2 * x + 2];  // V
+            } else {
+                up = &buffer[y * 2 * img->w + 2 * x - 2];  // U
+                yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y2
+                vp = &buffer[y * 2 * img->w + 2 * x];      // V
+            }
 
-    uint8_t *rotated_y_plane = rotated_buffer;        // Start of Y plane in rotated buffer
-    uint8_t *rotated_uv_plane = rotated_buffer + y_plane_size;  // Start of UV plane in rotated buffer
-
-    // Rotate Y plane (full resolution)
-    for (uint16_t y = 0; y < img->h; y++) {
-        for (uint16_t x = 0; x < img->w; x++) {
-            uint16_t new_x = y;
-            uint16_t new_y = img->w - 1 - x;
-            rotated_y_plane[new_y * img->h + new_x] = y_plane[y * img->w + x];
+            // Assuming tensor_input_1 follows the structure [1][3][h][w], storing Y, U, V values separately
+            tensor_input_1[0][0][y][x] = *yp;   // Y (Luminance)
+            tensor_input_1[0][1][y][x] = *up;   // U (Chrominance)
+            tensor_input_1[0][2][y][x] = *vp;   // V (Chrominance)
         }
     }
 
-    // Rotate UV plane (half resolution)
-    for (uint16_t y = 0; y < img->h; y += 2) {
-        for (uint16_t x = 0; x < img->w; x += 2) {
-            // Each pair of pixels shares the same U and V values
-            uint16_t new_x = y / 2;
-            uint16_t new_y = (img->w / 2) - 1 - x / 2;
+    // Call the entry function with the tensor input
+    entry(tensor_input_1, tensor_41);
 
-            rotated_uv_plane[2 * (new_y * img->h / 2 + new_x)] = uv_plane[2 * (y * img->w / 2 + x / 2)];     // U
-            rotated_uv_plane[2 * (new_y * img->h / 2 + new_x) + 1] = uv_plane[2 * (y * img->w / 2 + x / 2) + 1];  // V
+    float max_bearing = tensor_41[0][0];
+    float min_bearing = tensor_41[0][1];
+
+    // Print the values of min_bearing and max_bearing
+    printf("Min Bearing: %f\n", min_bearing);
+    printf("Max Bearing: %f\n", max_bearing);
+
+    // Convert normalized bearings to pixel locations
+    uint16_t min_y = (uint16_t)((min_bearing / 360.0) * img->h);
+    uint16_t max_y = (uint16_t)((max_bearing / 360.0) * img->h);
+
+    // // Convert normalized bearings to pixel locations
+    // uint16_t min_y = (uint16_t)(norm_min_bearing * img->h);
+    // uint16_t max_y = (uint16_t)(norm_max_bearing * img->h);
+
+    // Green color in YUV
+    uint8_t y_value = 76;   // Luminance (brightness) for red
+    uint8_t u_value = 84;   // U chrominance for red
+    uint8_t v_value = 255;  // V chrominance for red
+
+    // Ensure min_y is less than max_y
+    if (min_y > max_y) {
+        uint16_t temp = min_y;
+        min_y = max_y;
+        max_y = temp;
+    }
+
+    // Adjust thickness of drawn box
+    uint16_t thickness = 2;  // Make the box 2 pixels thick
+
+    // Draw the top and bottom borders of the box (hollow)
+    for (uint16_t x = 0; x < img->w; x++) {
+        // Top border (min_y)
+        for (uint16_t i = 0; i < thickness; i++) {
+            uint8_t *yp_top, *up_top, *vp_top;
+            if (x % 2 == 0) {
+                up_top = &buffer[(min_y + i) * 2 * img->w + 2 * x];      // U
+                yp_top = &buffer[(min_y + i) * 2 * img->w + 2 * x + 1];  // Y1
+                vp_top = &buffer[(min_y + i) * 2 * img->w + 2 * x + 2];  // V
+            } else {
+                up_top = &buffer[(min_y + i) * 2 * img->w + 2 * x - 2];  // U
+                yp_top = &buffer[(min_y + i) * 2 * img->w + 2 * x + 1];  // Y2
+                vp_top = &buffer[(min_y + i) * 2 * img->w + 2 * x];      // V
+            }
+
+            // Set the color for the top border
+            *yp_top = y_value;
+            *up_top = u_value;
+            *vp_top = v_value;
+        }
+
+        // Bottom border (max_y)
+        for (uint16_t i = 0; i < thickness; i++) {
+            uint8_t *yp_bottom, *up_bottom, *vp_bottom;
+            if (x % 2 == 0) {
+                up_bottom = &buffer[(max_y + i) * 2 * img->w + 2 * x];      // U
+                yp_bottom = &buffer[(max_y + i) * 2 * img->w + 2 * x + 1];  // Y1
+                vp_bottom = &buffer[(max_y + i) * 2 * img->w + 2 * x + 2];  // V
+            } else {
+                up_bottom = &buffer[(max_y + i) * 2 * img->w + 2 * x - 2];  // U
+                yp_bottom = &buffer[(max_y + i) * 2 * img->w + 2 * x + 1];  // Y2
+                vp_bottom = &buffer[(max_y + i) * 2 * img->w + 2 * x];      // V
+            }
+
+            // Set the color for the bottom border
+            *yp_bottom = y_value;
+            *up_bottom = u_value;
+            *vp_bottom = v_value;
         }
     }
 
-    // Free the original buffer and update the img with the new rotated buffer
-    free(img->buf);
-    img->buf = rotated_buffer;
+    // Draw the left and right borders of the box (hollow)
+    for (uint16_t y = min_y; y <= max_y; y++) {
+        // Left border (min_x)
+        for (uint16_t i = 0; i < thickness; i++) {
+            uint8_t *yp_left, *up_left, *vp_left;
+            if ((0 + i) % 2 == 0) {
+                up_left = &buffer[(y + i) * 2 * img->w];          // U
+                yp_left = &buffer[(y + i) * 2 * img->w + 1];      // Y1
+                vp_left = &buffer[(y + i) * 2 * img->w + 2];      // V
+            } else {
+                up_left = &buffer[(y + i) * 2 * img->w - 2];      // U
+                yp_left = &buffer[(y + i) * 2 * img->w + 1];      // Y2
+                vp_left = &buffer[(y + i) * 2 * img->w];          // V
+            }
 
-    // Swap width and height for the rotated image
-    uint16_t temp = img->w;
-    img->w = img->h;
-    img->h = temp;
+            // Set the color for the left border
+            *yp_left = y_value;
+            *up_left = u_value;
+            *vp_left = v_value;
+        }
 
-    // Print the image dimensions after rotating
-    fprintf(stderr, "Image rotated. New width: %d, New height: %d\n", img->w, img->h);
+        // Right border (max_x)
+        for (uint16_t i = 0; i < thickness; i++) {
+            uint8_t *yp_right, *up_right, *vp_right;
+            if ((img->w - 1 + i) % 2 == 0) {
+                up_right = &buffer[(y + i) * 2 * img->w + 2 * (img->w - 1)];  // U
+                yp_right = &buffer[(y + i) * 2 * img->w + 2 * (img->w - 1) + 1];  // Y1
+                vp_right = &buffer[(y + i) * 2 * img->w + 2 * (img->w - 1) + 2];  // V
+            } else {
+                up_right = &buffer[(y + i) * 2 * img->w + 2 * (img->w - 1) - 2];  // U
+                yp_right = &buffer[(y + i) * 2 * img->w + 2 * (img->w - 1) + 1];  // Y2
+                vp_right = &buffer[(y + i) * 2 * img->w + 2 * (img->w - 1)];      // V
+            }
 
+            // Set the color for the right border
+            *yp_right = y_value;
+            *up_right = u_value;
+            *vp_right = v_value;
+        }
+    }
 }
 
 void safest_bearing_periodic(void)
