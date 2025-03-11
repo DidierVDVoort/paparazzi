@@ -12,6 +12,24 @@
 
 static pthread_mutex_t mutex;
 
+#ifndef RAY_PATH_FINDER_FPS1
+#define RAY_PATH_FINDER_FPS1 0 ///< Default FPS (zero means run at camera fps)
+#endif
+
+// Filter Settings
+uint8_t margin_gr = 0;
+uint8_t lum_gr = 0;
+uint8_t cb_gr = 0;
+uint8_t cr_gr = 0;
+
+uint8_t margin_or = 0;
+uint8_t lum_or = 0;
+uint8_t cb_or = 0;
+uint8_t cr_or = 0;
+
+bool green_draw = false;
+bool orange_draw = false;
+
 float best_angle_rad = 0;
 
 // Function
@@ -58,9 +76,33 @@ struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute_
 
 void ray_paths_init(void)
 {
-  #define COLOR_OBJECT_DETECTOR_FPS1 1 ///< Default FPS (zero means run at camera fps)
-  // #ifdef COLOR_OBJECT_DETECTOR_CAMERA1
-  cv_add_to_device(&COLOR_OBJECT_DETECTOR_CAMERA1, random_draw1, COLOR_OBJECT_DETECTOR_FPS1, 0);
+  pthread_mutex_init(&mutex, NULL); // TODO: Check if this is necessary and work?
+
+  #ifndef RAY_PATH_FINDER_FPS1
+  #define RAY_PATH_FINDER_FPS1 0 ///< Default FPS (zero means run at camera fps)
+  #endif
+  
+  #ifdef RAY_PATH_FINDER_GREEN_LUM
+    lum_gr = RAY_PATH_FINDER_GREEN_LUM;
+    cb_gr = RAY_PATH_FINDER_GREEN_CB;
+    cr_gr = RAY_PATH_FINDER_GREEN_CR;
+    margin_gr = RAY_PATH_FINDER_GREEN_MARGIN;
+  #endif
+  #ifdef RAY_PATH_FINDER_GREEN_DRAW
+    green_draw = RAY_PATH_FINDER_GREEN_DRAW;
+  #endif
+
+  #ifdef RAY_PATH_FINDER_ORANGE_LUM
+    lum_or = RAY_PATH_FINDER_ORANGE_LUM;
+    cb_or = RAY_PATH_FINDER_ORANGE_CB;
+    cr_or = RAY_PATH_FINDER_ORANGE_CR;
+    margin_or = RAY_PATH_FINDER_ORANGE_MARGIN;
+  #endif
+  #ifdef RAY_PATH_FINDER_ORANGE_DRAW
+    orange_draw = RAY_PATH_FINDER_ORANGE_DRAW;
+  #endif
+
+  cv_add_to_device(&RAY_PATH_FINDER_CAMERA1, random_draw1, RAY_PATH_FINDER_FPS1, 0);
 }
 
 
@@ -72,26 +114,18 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
   uint8_t *buffer = img->buf;
 
   // Definitions of the colour green
-  uint8_t margin_gr = 30;
-  uint8_t lum_gr = 86;
   uint8_t lum_min_gr = lum_gr - margin_gr;
   uint8_t lum_max_gr = lum_gr + margin_gr;
-  uint8_t cb_gr = 84;
   uint8_t cb_min_gr = cb_gr - margin_gr;
   uint8_t cb_max_gr = cb_gr + margin_gr;
-  uint8_t cr_gr = 122;
   uint8_t cr_min_gr = cr_gr - margin_gr;
   uint8_t cr_max_gr = cr_gr + margin_gr;
 
   // Definitions of the colour orange
-  uint8_t margin_or = 40;
-  uint8_t lum_or = 112;
   uint8_t lum_min_or = lum_or - margin_or;
   uint8_t lum_max_or = lum_or + margin_or;
-  uint8_t cb_or = 82;
   uint8_t cb_min_or = cb_or - margin_or;
   uint8_t cb_max_or = cb_or + margin_or;
-  uint8_t cr_or = 190;
   uint8_t cr_min_or = cr_or - margin_or;
   uint8_t cr_max_or = cr_or + margin_or;
 
