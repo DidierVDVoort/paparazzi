@@ -12,16 +12,15 @@
 #include "pthread.h"
 
 // Function prototype
-void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_max_bearing);
+void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_max_bearing, float (*tensor_41)[1][2]);
+
+float bearings_tensor[1][2];
 
 struct image_t *random_draw1(struct image_t *img, uint8_t camera_id);
 struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute__((unused)))
 {
-  draw_bearing_box(img, 0.3, 0.7);
-
-  
-
-  return img;
+    draw_bearing_box(img, 0.3, 0.7, &bearings_tensor);
+    return img;
 }
 
 void safest_bearing_init(void)
@@ -33,13 +32,12 @@ void safest_bearing_init(void)
 
 void entry(const float tensor_input_1[1][3][208][96], float tensor_41[1][2]);
 
-void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_max_bearing)
+void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_max_bearing, float (*tensor_41)[1][2])
 {
     uint8_t *buffer = img->buf;
 
     // Prepare tensor input for the entry function, assuming the tensor is [1][3][208][96]
     float tensor_input_1[1][3][208][96];  // Adjust the size based on your image size
-    float tensor_41[1][2];
 
     // Convert YUV image to tensor format
     for (int y = 0; y < img->h; y++) {
@@ -63,10 +61,10 @@ void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_ma
     }
 
     // Call the entry function with the tensor input
-    entry(tensor_input_1, tensor_41);
+    entry(tensor_input_1, *tensor_41);
 
-    float min_bearing = tensor_41[0][0];
-    float max_bearing = tensor_41[0][1];
+    float min_bearing = (*tensor_41)[0][0];
+    float max_bearing = (*tensor_41)[0][1];
 
     // Ensure min_bearing is non-negative
     if (min_bearing < 0) {
@@ -77,17 +75,10 @@ void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_ma
         max_bearing = 0;
     }
 
-    // Print the values of min_bearing and max_bearing
-    printf("Min Bearing: %f\n", min_bearing);
-    printf("Max Bearing: %f\n", max_bearing);
 
     // Convert normalized bearings to pixel locations
     uint8_t min_y = (uint8_t)(min_bearing * img->h);
     uint8_t max_y = (uint8_t)(max_bearing * img->h);
-
-    // // Convert normalized bearings to pixel locations
-    // uint16_t min_y = (uint16_t)(norm_min_bearing * img->h);
-    // uint16_t max_y = (uint16_t)(norm_max_bearing * img->h);
 
     // Red color in YUV
     uint8_t y_value = 76;   // Luminance (brightness) for red

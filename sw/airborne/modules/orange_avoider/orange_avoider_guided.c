@@ -27,6 +27,7 @@
 
 #include "modules/orange_avoider/orange_avoider_guided.h"
 #include "firmwares/rotorcraft/guidance/guidance_h.h"
+#include "modules/safest_bearing/safest_bearing.h"
 #include "generated/airframe.h"
 #include "state.h"
 #include "modules/core/abi.h"
@@ -142,6 +143,13 @@ void orange_avoider_guided_periodic(void)
   Bound(obstacle_free_confidence, 0, max_trajectory_confidence);
 
   float speed_sp = fminf(oag_max_speed, 0.2f * obstacle_free_confidence);
+
+  // float min_bearing, max_bearing;
+
+  // min_max_bearings(&min_bearing, &max_bearing);
+  
+  fprintf(stderr, "Minimum Bearing: %f\n", bearings_tensor[0][0]);
+  fprintf(stderr, "Maximum Bearing: %f\n", bearings_tensor[0][1]);
 
   switch (navigation_state){
     case SAFE:
