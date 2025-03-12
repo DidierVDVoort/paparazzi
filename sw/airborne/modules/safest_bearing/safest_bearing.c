@@ -38,7 +38,7 @@ void entry(const float tensor_input_1[1][3][208][96], float tensor_41[1][2]);
 
 void confirm_heading(float y_cen, float y_new, int8_t *confidence)
 {
-    float th = 12.0;
+    float th = 12.5;
 
     // fprintf(stderr, "difference: %f\n", fabsf(y_new - y_cen));
     if (fabsf(y_new - y_cen) < th) {
