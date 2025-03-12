@@ -144,14 +144,7 @@ void orange_avoider_guided_periodic(void)
 
   float speed_sp = fminf(oag_max_speed, 0.2f * obstacle_free_confidence);
 
-  // float min_bearing, max_bearing;
-
-  // min_max_bearings(&min_bearing, &max_bearing);
-
-  fprintf(stderr, "Current Heading: %f\n", stateGetNedToBodyEulers_f()->psi);
-  
-  fprintf(stderr, "Minimum Bearing: %f\n", bearings_tensor[0][0]);
-  fprintf(stderr, "Maximum Bearing: %f\n", bearings_tensor[0][1]);
+  fprintf(stderr, "Recieved y_direction: %f\n", y_centre);
 
   switch (navigation_state){
     case SAFE:

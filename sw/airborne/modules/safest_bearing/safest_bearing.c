@@ -15,6 +15,10 @@
 void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_max_bearing, float (*tensor_41)[1][2]);
 
 float bearings_tensor[1][2];
+float y_centre;
+int8_t confidence = 0;
+float y_centre_buffer = 0;
+int8_t confidence_th = 20;
 
 struct image_t *random_draw1(struct image_t *img, uint8_t camera_id);
 struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute__((unused)))
@@ -31,6 +35,22 @@ void safest_bearing_init(void)
 }
 
 void entry(const float tensor_input_1[1][3][208][96], float tensor_41[1][2]);
+
+void confirm_heading(float y_cen, float y_new, int8_t *confidence)
+{
+    float th = 12.0;
+
+    // fprintf(stderr, "difference: %f\n", fabsf(y_new - y_cen));
+    if (fabsf(y_new - y_cen) < th) {
+        *confidence += 1;
+    } else {
+        *confidence -= 1;
+    }
+
+    if (*confidence < 0) {
+        *confidence = 0;
+    }
+}
 
 void draw_circle(uint8_t *buffer, int img_width, int img_height, int center_x, int center_y, int radius, uint8_t y_value, uint8_t u_value, uint8_t v_value)
 {
@@ -244,8 +264,19 @@ void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_ma
     uint16_t center_x = img->w / 2;
     uint16_t center_y = (min_y + max_y) / 2;
 
+    if (confidence == 0){
+        y_centre_buffer = center_y;
+        confidence = 1;
+    } 
+    else if(confidence > confidence_th){ 
+        y_centre = y_centre_buffer;
+        confidence = 0;
+    }
+    else {
+        confirm_heading(y_centre_buffer, center_y, &confidence);
+    }
     // Draw a 3-pixel radius circle in the middle of the box
-    draw_circle(buffer, img->w, img->h, center_x, center_y, 6 , y_value, u_value, v_value);
+    draw_circle(buffer, img->w, img->h, center_x, y_centre, 6 , y_value, u_value, v_value);
     
 }
 
