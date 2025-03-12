@@ -58,7 +58,8 @@ float oag_color_count_frac = 0.18f;       // obstacle detection threshold as a f
 float oag_floor_count_frac = 0.05f;       // floor detection threshold as a fraction of total of image
 float oag_max_speed = 0.5f;               // max flight speed [m/s]
 float oag_heading_rate = RadOfDeg(20.f);  // heading change setpoint for avoidance [rad/s]
-
+float fov_angle = RadOfDeg(120.f);         // field of view angle of the camera [rad]
+float im_width = 208.f;
 // define and initialise global variables
 enum navigation_state_t navigation_state = SEARCH_FOR_SAFE_HEADING;   // current state in state machine
 int32_t color_count = 0;                // orange color count from color filter for obstacle detection
@@ -145,6 +146,9 @@ void orange_avoider_guided_periodic(void)
   float speed_sp = fminf(oag_max_speed, 0.2f * obstacle_free_confidence);
 
   fprintf(stderr, "Recieved y_direction: %f\n", y_centre);
+  float abs_ang = (fov_angle/im_width)*y_centre;
+  float heading = stateGetNedToBodyEulers_f()->psi + abs_ang;
+  fprintf(stderr, "Heading: %f\n", heading);
 
   switch (navigation_state){
     case SAFE:
