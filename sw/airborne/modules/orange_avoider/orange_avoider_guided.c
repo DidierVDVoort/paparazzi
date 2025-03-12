@@ -178,17 +178,18 @@ void orange_avoider_guided_periodic(void)
 
     case SET_HEADING:
       // abs_ang = (fov_angle/im_width)*y_centre;
-      if (y_centre >= im_width/2.0f){
-      abs_ang = atan(im_width/2.0f - y_centre)/im_height; //for the left side of the camera
-      heading = stateGetNedToBodyEulers_f()->psi - abs_ang;
-      } else {
-      abs_ang = atan(im_height/(im_width/2.0f - y_centre)); //right side of the camera
-      heading = stateGetNedToBodyEulers_f()->psi - abs_ang;
-      }
       
+      abs_ang = atan((im_width - 2*y_centre)/im_width)*tan(fov_angle/2);
+      heading = stateGetNedToBodyEulers_f()->psi - abs_ang;
+      
+      fprintf(stderr, "Rotation Angle: %f\n", abs_ang*180/3.14159f); 
       fprintf(stderr, "Heading: %f\n", heading);  
+      u_int8_t k = 1;
+      if (abs_ang>0){
+        k = -1;
+      }
       // guidance_h_set_heading(heading);
-      guidance_h_set_heading_rate(heading * 0.17f);
+      guidance_h_set_heading_rate(k*heading * 0.07f);
       guidance_h_set_body_vel(speed_sp*0.67f , 0);
       
       temp_error = fabsf(stateGetNedToBodyEulers_f()->psi - heading);
