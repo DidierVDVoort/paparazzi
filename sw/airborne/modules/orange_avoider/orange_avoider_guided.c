@@ -147,6 +147,8 @@ void orange_avoider_guided_periodic(void)
   // float min_bearing, max_bearing;
 
   // min_max_bearings(&min_bearing, &max_bearing);
+
+  fprintf(stderr, "Current Heading: %f\n", stateGetNedToBodyEulers_f()->psi);
   
   fprintf(stderr, "Minimum Bearing: %f\n", bearings_tensor[0][0]);
   fprintf(stderr, "Maximum Bearing: %f\n", bearings_tensor[0][1]);

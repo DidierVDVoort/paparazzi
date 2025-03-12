@@ -32,6 +32,69 @@ void safest_bearing_init(void)
 
 void entry(const float tensor_input_1[1][3][208][96], float tensor_41[1][2]);
 
+void draw_circle(uint8_t *buffer, int img_width, int img_height, int center_x, int center_y, int radius, uint8_t y_value, uint8_t u_value, uint8_t v_value)
+{
+    int x = radius;
+    int y = 0;
+    int err = 0;
+
+    while (x >= y)
+    {
+        // Draw the eight octants of the circle
+        if (center_x + x < img_width && center_y + y < img_height) {
+            buffer[(center_y + y) * 2 * img_width + 2 * (center_x + x)] = u_value;
+            buffer[(center_y + y) * 2 * img_width + 2 * (center_x + x) + 1] = y_value;
+            buffer[(center_y + y) * 2 * img_width + 2 * (center_x + x) + 2] = v_value;
+        }
+        if (center_x + y < img_width && center_y + x < img_height) {
+            buffer[(center_y + x) * 2 * img_width + 2 * (center_x + y)] = u_value;
+            buffer[(center_y + x) * 2 * img_width + 2 * (center_x + y) + 1] = y_value;
+            buffer[(center_y + x) * 2 * img_width + 2 * (center_x + y) + 2] = v_value;
+        }
+        if (center_x - y >= 0 && center_y + x < img_height) {
+            buffer[(center_y + x) * 2 * img_width + 2 * (center_x - y)] = u_value;
+            buffer[(center_y + x) * 2 * img_width + 2 * (center_x - y) + 1] = y_value;
+            buffer[(center_y + x) * 2 * img_width + 2 * (center_x - y) + 2] = v_value;
+        }
+        if (center_x - x >= 0 && center_y + y < img_height) {
+            buffer[(center_y + y) * 2 * img_width + 2 * (center_x - x)] = u_value;
+            buffer[(center_y + y) * 2 * img_width + 2 * (center_x - x) + 1] = y_value;
+            buffer[(center_y + y) * 2 * img_width + 2 * (center_x - x) + 2] = v_value;
+        }
+        if (center_x - x >= 0 && center_y - y >= 0) {
+            buffer[(center_y - y) * 2 * img_width + 2 * (center_x - x)] = u_value;
+            buffer[(center_y - y) * 2 * img_width + 2 * (center_x - x) + 1] = y_value;
+            buffer[(center_y - y) * 2 * img_width + 2 * (center_x - x) + 2] = v_value;
+        }
+        if (center_x - y >= 0 && center_y - x >= 0) {
+            buffer[(center_y - x) * 2 * img_width + 2 * (center_x - y)] = u_value;
+            buffer[(center_y - x) * 2 * img_width + 2 * (center_x - y) + 1] = y_value;
+            buffer[(center_y - x) * 2 * img_width + 2 * (center_x - y) + 2] = v_value;
+        }
+        if (center_x + y < img_width && center_y - x >= 0) {
+            buffer[(center_y - x) * 2 * img_width + 2 * (center_x + y)] = u_value;
+            buffer[(center_y - x) * 2 * img_width + 2 * (center_x + y) + 1] = y_value;
+            buffer[(center_y - x) * 2 * img_width + 2 * (center_x + y) + 2] = v_value;
+        }
+        if (center_x + x < img_width && center_y - y >= 0) {
+            buffer[(center_y - y) * 2 * img_width + 2 * (center_x + x)] = u_value;
+            buffer[(center_y - y) * 2 * img_width + 2 * (center_x + x) + 1] = y_value;
+            buffer[(center_y - y) * 2 * img_width + 2 * (center_x + x) + 2] = v_value;
+        }
+
+        if (err <= 0)
+        {
+            y += 1;
+            err += 2 * y + 1;
+        }
+        if (err > 0)
+        {
+            x -= 1;
+            err -= 2 * x + 1;
+        }
+    }
+}
+
 void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_max_bearing, float (*tensor_41)[1][2])
 {
     uint8_t *buffer = img->buf;
@@ -176,6 +239,14 @@ void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_ma
             *vp_right = v_value;
         }
     }
+
+    // Calculate the center of the box
+    uint16_t center_x = img->w / 2;
+    uint16_t center_y = (min_y + max_y) / 2;
+
+    // Draw a 3-pixel radius circle in the middle of the box
+    draw_circle(buffer, img->w, img->h, center_x, center_y, 6 , y_value, u_value, v_value);
+    
 }
 
 void safest_bearing_periodic(void)

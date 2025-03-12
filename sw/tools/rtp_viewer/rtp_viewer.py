@@ -136,7 +136,7 @@ if __name__ == '__main__':
 
     filename = os.path.dirname(os.path.abspath(__file__)) + "/rtp_" + str(args.port) + ".sdp"
 
-    viewer = RtpViewer('rtp://127.0.0.1:5000')
+    viewer = RtpViewer('/home/abhishek/paparazzi/sw/tools/rtp_viewer/rtp_5000.sdp')
     viewer.scale = args.scale
     viewer.rotate = args.rotate
 
