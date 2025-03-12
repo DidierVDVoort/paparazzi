@@ -13,6 +13,7 @@
 static pthread_mutex_t mutex;
 
 float best_angle_rad = 0;
+float best_angle_rad_instruction = 0;
 
 // Function
 int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction, float best_angle_rad);
@@ -41,18 +42,59 @@ struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute_
   pthread_mutex_lock(&mutex);
   for (int i =0; i <9; i++){
     costs[i] = cost_function(img, angles[i], entry_point_fractions[i], best_angle_rad);
-    if (costs[i] < min_cost){
-      min_cost = costs[i];
-      best_index = i;
-    }
   }
+
+  int16_t filtered_costs[9];  // Temporary array for filtered values
+
+  for (int i = 0; i < 9; i++) {
+      if (i == 0) {
+          // Left boundary: 0.8 * itself
+          filtered_costs[i] = (int16_t)(0.8 * costs[i]);
+      } else if (i == 8) {
+          // Right boundary: 0.8 * itself
+          filtered_costs[i] = (int16_t)(0.8 * costs[i]);
+      } else {
+          // Middle values: 0.2 * left + 0.6 * itself + 0.2 * right
+          filtered_costs[i] = (int16_t)(0.2 * costs[i - 1] + 0.6 * costs[i] + 0.2 * costs[i + 1]);
+      }
+  }
+  
+  // Copy filtered values back to costs
+  for (int i = 0; i < 9; i++) {
+      costs[i] = filtered_costs[i];
+      if (costs[i] < min_cost){
+        min_cost = costs[i];
+        best_index = i;
+      }
+  }
+
   best_angle_rad = angles[best_index];
+  best_angle_rad_instruction = 0;
+  static float prev1 = -1, prev2 = -1;
+
+
+  prev2 = prev1;
+  prev1 = best_angle_rad;
+
+  if (prev1 == prev2){
+    best_angle_rad_instruction = best_angle_rad;
+  }
+
   pthread_mutex_unlock(&mutex);
 
   draw_best_line(img, best_angle_rad, entry_point_fractions[best_index]);
   
-  fprintf(stderr, "[random_draw1] Min Cost: %d, Best Angle: %.2f degrees\n", min_cost, best_angle_rad * 180.0f / M_PI);
+  fprintf(stderr, "[random_draw1] Min Cost: %d, Best Angle: %.2f degrees\n", min_cost, best_angle_rad_instruction * 180.0f / M_PI);
   
+  for (int i = 0; i < 9; i++) {
+    fprintf(stderr, "%d", costs[i]);
+    if (i < 8) { // Add a comma except for the last element
+        fprintf(stderr, ", ");
+    }
+  }
+
+fprintf(stderr, "]\n");  // Close the array and move to a new line
+
   return img;
 }
 
@@ -127,8 +169,8 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
       }
       
       uint16_t weight;
-      if (x <= 30) {
-          weight = 3;
+      if (x <= 20) {
+          weight = 5;
       } else if (x > 30 && x <= 60) {
           weight = 2;
       } else {
@@ -155,7 +197,7 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
       (*up >= cb_min_or ) && (*up <= cb_max_or ) &&
       (*vp >= cr_min_or ) && (*vp <= cr_max_or )) 
       {
-        cost += 10*weight;
+        cost += 5*weight;
         // if (draw) {
         //   *yp = 128;
         // }
@@ -163,7 +205,7 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
     }
   }
   // Normalization
-  cost = round(cost * 3* (img->w/2) / num_pixels_line);
+  cost = round(cost*100/ num_pixels_line);
 
   // Prefer going straight over turning
   if (alpha == 0){
@@ -171,7 +213,7 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
   }
   // Prefer inertia
   if (alpha == best_angle_rad){
-    cost -= 30;
+    cost -= 20;
   }
 
   
@@ -219,8 +261,9 @@ void draw_best_line(struct image_t *img, float alpha, float entry_point_fraction
 
 void ray_paths_periodic(void)
 {
-  fprintf(stderr, "Best Angle: %.2f degrees\n", best_angle_rad * 180.0f / M_PI);
+  //fprintf(stderr, "Best Angle: %.2f degrees\n", best_angle_rad * 180.0f / M_PI);
   pthread_mutex_lock(&mutex);
-  AbiSendMsgVISUAL_DETECTION(3, 0, 0, 0, 0, (int32_t) (best_angle_rad * 180.0f / M_PI), 0);
+  AbiSendMsgVISUAL_DETECTION(3, 0, 0, 0, 0, (int32_t) (-0.10f*best_angle_rad_instruction * 180.0f / M_PI), 0);
   pthread_mutex_unlock(&mutex);
 }
+
