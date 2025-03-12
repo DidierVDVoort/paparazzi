@@ -50,14 +50,23 @@ enum navigation_state_t {
   OBSTACLE_FOUND,
   SEARCH_FOR_SAFE_HEADING,
   OUT_OF_BOUNDS,
-  REENTER_ARENA
+  REENTER_ARENA,
+  SET_HEADING,
+  TURN_TO_HEADING
 };
 
 // define settings
-float oag_color_count_frac = 0.18f;       // obstacle detection threshold as a fraction of total of image
-float oag_floor_count_frac = 0.05f;       // floor detection threshold as a fraction of total of image
-float oag_max_speed = 0.5f;               // max flight speed [m/s]
+float oag_color_count_frac = 0.50f;       // obstacle detection threshold as a fraction of total of image
+float oag_floor_count_frac = 0.01f;       // floor detection threshold as a fraction of total of image
+float oag_max_speed = 0.2f;               // max flight speed [m/s]
 float oag_heading_rate = RadOfDeg(20.f);  // heading change setpoint for avoidance [rad/s]
+float fov_angle = 2.1f;        // field of view angle of the camera [rad]
+float im_width = 208.f;                   // image width in pixels
+u_int16_t wait_time = 15;                    // time to wait before changing heading [s]
+float abs_ang = 0;                        // absolute angle of the floor centroid
+float heading = 0;                        // heading of the drone
+u_int16_t counter = 0;
+float acceptable_heading_th = 0.10f;
 
 // define and initialise global variables
 enum navigation_state_t navigation_state = SEARCH_FOR_SAFE_HEADING;   // current state in state machine
@@ -67,7 +76,7 @@ int32_t floor_centroid = 0;             // floor detector centroid in y directio
 float avoidance_heading_direction = 0;  // heading change direction for avoidance [rad/s]
 int16_t obstacle_free_confidence = 0;   // a measure of how certain we are that the way ahead if safe.
 
-const int16_t max_trajectory_confidence = 5;  // number of consecutive negative object detections to be sure we are obstacle free
+const int16_t max_trajectory_confidence = 3;  // number of consecutive negative object detections to be sure we are obstacle free
 
 // This call back will be used to receive the color count from the orange detector
 #ifndef ORANGE_AVOIDER_VISUAL_DETECTION_ID
@@ -131,7 +140,7 @@ void orange_avoider_guided_periodic(void)
   VERBOSE_PRINT("Color_count: %d  threshold: %d state: %d \n", color_count, color_count_threshold, navigation_state);
   VERBOSE_PRINT("Floor count: %d, threshold: %d\n", floor_count, floor_count_threshold);
   VERBOSE_PRINT("Floor centroid: %f\n", floor_centroid_frac);
-
+  VERBOSE_PRINT("Remaining Time before heading change: %d\n", counter);
   // update our safe confidence using color threshold
   if(color_count < color_count_threshold){
     obstacle_free_confidence++;
@@ -144,19 +153,52 @@ void orange_avoider_guided_periodic(void)
 
   float speed_sp = fminf(oag_max_speed, 0.2f * obstacle_free_confidence);
 
-  fprintf(stderr, "Recieved y_direction: %f\n", y_centre);
+  // fprintf(stderr, "Recieved y_direction: %f\n", y_centre);
+  
 
   switch (navigation_state){
     case SAFE:
-      if (floor_count < floor_count_threshold || fabsf(floor_centroid_frac) > 0.12){
+      if (floor_count < floor_count_threshold ){
         navigation_state = OUT_OF_BOUNDS;
+        counter = wait_time;
       } else if (obstacle_free_confidence == 0){
         navigation_state = OBSTACLE_FOUND;
+        counter = wait_time;
+      } else if (counter == 0) {
+        navigation_state = SET_HEADING;
       } else {
         guidance_h_set_body_vel(speed_sp, 0);
+        counter = counter - 1;
       }
 
       break;
+
+    case SET_HEADING:
+      abs_ang = (fov_angle/im_width)*y_centre;
+      heading = stateGetNedToBodyEulers_f()->psi - abs_ang;
+      fprintf(stderr, "Heading: %f\n", heading);  
+
+      guidance_h_set_heading_rate(heading * 0.05f);
+      guidance_h_set_body_vel(speed_sp*0.33f , 0);
+
+      navigation_state = TURN_TO_HEADING;
+      break;
+
+    case TURN_TO_HEADING:
+      fprintf(stderr,"Heading Error: %f\n",fabsf(stateGetNedToBodyEulers_f()->psi - heading));  
+      if (floor_count < floor_count_threshold){
+        navigation_state = OUT_OF_BOUNDS;
+        counter = wait_time;
+      } else if (obstacle_free_confidence == 0){
+        navigation_state = OBSTACLE_FOUND;
+        counter = wait_time;
+      } else if (fabsf(stateGetNedToBodyEulers_f()->psi - heading) < acceptable_heading_th){
+        counter = wait_time;
+        guidance_h_set_heading(stateGetNedToBodyEulers_f()->psi);
+        navigation_state = SAFE;
+      }
+    break;
+
     case OBSTACLE_FOUND:
       // stop
       guidance_h_set_body_vel(0, 0);
@@ -169,6 +211,7 @@ void orange_avoider_guided_periodic(void)
       break;
     case SEARCH_FOR_SAFE_HEADING:
       guidance_h_set_heading_rate(avoidance_heading_direction * oag_heading_rate);
+      fprintf(stderr, "Confidence: %d\n", obstacle_free_confidence);
 
       // make sure we have a couple of good readings before declaring the way safe
       if (obstacle_free_confidence >= 2){
