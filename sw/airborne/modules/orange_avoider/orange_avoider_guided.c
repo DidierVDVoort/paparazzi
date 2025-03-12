@@ -33,6 +33,7 @@
 #include "modules/core/abi.h"
 #include <stdio.h>
 #include <time.h>
+#include <math.h>
 
 #define ORANGE_AVOIDER_VERBOSE TRUE
 
@@ -56,17 +57,19 @@ enum navigation_state_t {
 };
 
 // define settings
-float oag_color_count_frac = 0.50f;       // obstacle detection threshold as a fraction of total of image
+float oag_color_count_frac = 0.30f;       // obstacle detection threshold as a fraction of total of image
 float oag_floor_count_frac = 0.01f;       // floor detection threshold as a fraction of total of image
 float oag_max_speed = 0.2f;               // max flight speed [m/s]
 float oag_heading_rate = RadOfDeg(20.f);  // heading change setpoint for avoidance [rad/s]
 float fov_angle = 2.1f;        // field of view angle of the camera [rad]
 float im_width = 208.f;                   // image width in pixels
+float im_height = 96.0f;                  // image height in pixels
 u_int16_t wait_time = 15;                    // time to wait before changing heading [s]
 float abs_ang = 0;                        // absolute angle of the floor centroid
 float heading = 0;                        // heading of the drone
 u_int16_t counter = 0;
 float acceptable_heading_th = 0.10f;
+float temp_error = 0.0f;
 
 // define and initialise global variables
 enum navigation_state_t navigation_state = SEARCH_FOR_SAFE_HEADING;   // current state in state machine
@@ -174,13 +177,22 @@ void orange_avoider_guided_periodic(void)
       break;
 
     case SET_HEADING:
-      abs_ang = (fov_angle/im_width)*y_centre;
+      // abs_ang = (fov_angle/im_width)*y_centre;
+      if (y_centre >= im_width/2.0f){
+      abs_ang = atan(im_width/2.0f - y_centre)/im_height; //for the left side of the camera
       heading = stateGetNedToBodyEulers_f()->psi - abs_ang;
+      } else {
+      abs_ang = atan(im_height/(im_width/2.0f - y_centre)); //right side of the camera
+      heading = stateGetNedToBodyEulers_f()->psi - abs_ang;
+      }
+      
       fprintf(stderr, "Heading: %f\n", heading);  
-
-      guidance_h_set_heading_rate(heading * 0.05f);
-      guidance_h_set_body_vel(speed_sp*0.33f , 0);
-
+      // guidance_h_set_heading(heading);
+      guidance_h_set_heading_rate(heading * 0.17f);
+      guidance_h_set_body_vel(speed_sp*0.67f , 0);
+      
+      temp_error = fabsf(stateGetNedToBodyEulers_f()->psi - heading);
+      
       navigation_state = TURN_TO_HEADING;
       break;
 
@@ -192,10 +204,12 @@ void orange_avoider_guided_periodic(void)
       } else if (obstacle_free_confidence == 0){
         navigation_state = OBSTACLE_FOUND;
         counter = wait_time;
-      } else if (fabsf(stateGetNedToBodyEulers_f()->psi - heading) < acceptable_heading_th){
+      } else if (fabsf(stateGetNedToBodyEulers_f()->psi - heading) < acceptable_heading_th || 2*3.14159f - fabsf(stateGetNedToBodyEulers_f()->psi - heading) < acceptable_heading_th){
         counter = wait_time;
         guidance_h_set_heading(stateGetNedToBodyEulers_f()->psi);
         navigation_state = SAFE;
+      } else if (fabsf(stateGetNedToBodyEulers_f()->psi - heading)>temp_error){
+        guidance_h_set_heading_rate(heading * 0.2f);
       }
     break;
 
