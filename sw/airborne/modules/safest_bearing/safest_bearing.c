@@ -18,7 +18,7 @@ float bearings_tensor[1][2];
 float y_centre;
 int8_t confidence = 0;
 float y_centre_buffer = 0;
-int8_t confidence_th = 20;
+int8_t confidence_th = 15;
 
 struct image_t *random_draw1(struct image_t *img, uint8_t camera_id);
 struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute__((unused)))
@@ -54,67 +54,68 @@ void confirm_heading(float y_cen, float y_new, int8_t *confidence)
 
 void draw_circle(uint8_t *buffer, int img_width, int img_height, int center_x, int center_y, int radius, uint8_t y_value, uint8_t u_value, uint8_t v_value)
 {
-    int x = radius;
-    int y = 0;
-    int err = 0;
+    for (int r = radius; r > 0; r--) {
+        int x = r;
+        int y = 0;
+        int err = 0;
 
-    while (x >= y)
-    {
-        // Draw the eight octants of the circle
-        if (center_x + x < img_width && center_y + y < img_height) {
-            buffer[(center_y + y) * 2 * img_width + 2 * (center_x + x)] = u_value;
-            buffer[(center_y + y) * 2 * img_width + 2 * (center_x + x) + 1] = y_value;
-            buffer[(center_y + y) * 2 * img_width + 2 * (center_x + x) + 2] = v_value;
-        }
-        if (center_x + y < img_width && center_y + x < img_height) {
-            buffer[(center_y + x) * 2 * img_width + 2 * (center_x + y)] = u_value;
-            buffer[(center_y + x) * 2 * img_width + 2 * (center_x + y) + 1] = y_value;
-            buffer[(center_y + x) * 2 * img_width + 2 * (center_x + y) + 2] = v_value;
-        }
-        if (center_x - y >= 0 && center_y + x < img_height) {
-            buffer[(center_y + x) * 2 * img_width + 2 * (center_x - y)] = u_value;
-            buffer[(center_y + x) * 2 * img_width + 2 * (center_x - y) + 1] = y_value;
-            buffer[(center_y + x) * 2 * img_width + 2 * (center_x - y) + 2] = v_value;
-        }
-        if (center_x - x >= 0 && center_y + y < img_height) {
-            buffer[(center_y + y) * 2 * img_width + 2 * (center_x - x)] = u_value;
-            buffer[(center_y + y) * 2 * img_width + 2 * (center_x - x) + 1] = y_value;
-            buffer[(center_y + y) * 2 * img_width + 2 * (center_x - x) + 2] = v_value;
-        }
-        if (center_x - x >= 0 && center_y - y >= 0) {
-            buffer[(center_y - y) * 2 * img_width + 2 * (center_x - x)] = u_value;
-            buffer[(center_y - y) * 2 * img_width + 2 * (center_x - x) + 1] = y_value;
-            buffer[(center_y - y) * 2 * img_width + 2 * (center_x - x) + 2] = v_value;
-        }
-        if (center_x - y >= 0 && center_y - x >= 0) {
-            buffer[(center_y - x) * 2 * img_width + 2 * (center_x - y)] = u_value;
-            buffer[(center_y - x) * 2 * img_width + 2 * (center_x - y) + 1] = y_value;
-            buffer[(center_y - x) * 2 * img_width + 2 * (center_x - y) + 2] = v_value;
-        }
-        if (center_x + y < img_width && center_y - x >= 0) {
-            buffer[(center_y - x) * 2 * img_width + 2 * (center_x + y)] = u_value;
-            buffer[(center_y - x) * 2 * img_width + 2 * (center_x + y) + 1] = y_value;
-            buffer[(center_y - x) * 2 * img_width + 2 * (center_x + y) + 2] = v_value;
-        }
-        if (center_x + x < img_width && center_y - y >= 0) {
-            buffer[(center_y - y) * 2 * img_width + 2 * (center_x + x)] = u_value;
-            buffer[(center_y - y) * 2 * img_width + 2 * (center_x + x) + 1] = y_value;
-            buffer[(center_y - y) * 2 * img_width + 2 * (center_x + x) + 2] = v_value;
-        }
+        while (x >= y)
+        {
+            // Draw the eight octants of the circle
+            if (center_x + x < img_width && center_y + y < img_height) {
+                buffer[(center_y + y) * 2 * img_width + 2 * (center_x + x)] = u_value;
+                buffer[(center_y + y) * 2 * img_width + 2 * (center_x + x) + 1] = y_value;
+                buffer[(center_y + y) * 2 * img_width + 2 * (center_x + x) + 2] = v_value;
+            }
+            if (center_x + y < img_width && center_y + x < img_height) {
+                buffer[(center_y + x) * 2 * img_width + 2 * (center_x + y)] = u_value;
+                buffer[(center_y + x) * 2 * img_width + 2 * (center_x + y) + 1] = y_value;
+                buffer[(center_y + x) * 2 * img_width + 2 * (center_x + y) + 2] = v_value;
+            }
+            if (center_x - y >= 0 && center_y + x < img_height) {
+                buffer[(center_y + x) * 2 * img_width + 2 * (center_x - y)] = u_value;
+                buffer[(center_y + x) * 2 * img_width + 2 * (center_x - y) + 1] = y_value;
+                buffer[(center_y + x) * 2 * img_width + 2 * (center_x - y) + 2] = v_value;
+            }
+            if (center_x - x >= 0 && center_y + y < img_height) {
+                buffer[(center_y + y) * 2 * img_width + 2 * (center_x - x)] = u_value;
+                buffer[(center_y + y) * 2 * img_width + 2 * (center_x - x) + 1] = y_value;
+                buffer[(center_y + y) * 2 * img_width + 2 * (center_x - x) + 2] = v_value;
+            }
+            if (center_x - x >= 0 && center_y - y >= 0) {
+                buffer[(center_y - y) * 2 * img_width + 2 * (center_x - x)] = u_value;
+                buffer[(center_y - y) * 2 * img_width + 2 * (center_x - x) + 1] = y_value;
+                buffer[(center_y - y) * 2 * img_width + 2 * (center_x - x) + 2] = v_value;
+            }
+            if (center_x - y >= 0 && center_y - x >= 0) {
+                buffer[(center_y - x) * 2 * img_width + 2 * (center_x - y)] = u_value;
+                buffer[(center_y - x) * 2 * img_width + 2 * (center_x - y) + 1] = y_value;
+                buffer[(center_y - x) * 2 * img_width + 2 * (center_x - y) + 2] = v_value;
+            }
+            if (center_x + y < img_width && center_y - x >= 0) {
+                buffer[(center_y - x) * 2 * img_width + 2 * (center_x + y)] = u_value;
+                buffer[(center_y - x) * 2 * img_width + 2 * (center_x + y) + 1] = y_value;
+                buffer[(center_y - x) * 2 * img_width + 2 * (center_x + y) + 2] = v_value;
+            }
+            if (center_x + x < img_width && center_y - y >= 0) {
+                buffer[(center_y - y) * 2 * img_width + 2 * (center_x + x)] = u_value;
+                buffer[(center_y - y) * 2 * img_width + 2 * (center_x + x) + 1] = y_value;
+                buffer[(center_y - y) * 2 * img_width + 2 * (center_x + x) + 2] = v_value;
+            }
 
-        if (err <= 0)
-        {
-            y += 1;
-            err += 2 * y + 1;
-        }
-        if (err > 0)
-        {
-            x -= 1;
-            err -= 2 * x + 1;
+            if (err <= 0)
+            {
+                y += 1;
+                err += 2 * y + 1;
+            }
+            if (err > 0)
+            {
+                x -= 1;
+                err -= 2 * x + 1;
+            }
         }
     }
 }
-
 void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_max_bearing, float (*tensor_41)[1][2])
 {
     uint8_t *buffer = img->buf;
@@ -276,7 +277,7 @@ void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_ma
         confirm_heading(y_centre_buffer, center_y, &confidence);
     }
     // Draw a 3-pixel radius circle in the middle of the box
-    draw_circle(buffer, img->w, img->h, center_x, y_centre, 6 , y_value, u_value, v_value);
+    draw_circle(buffer, img->w, img->h, center_x, center_y, 3, y_value, u_value, v_value);
     
 }
 

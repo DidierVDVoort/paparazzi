@@ -6,6 +6,13 @@
     Detects an object by a continuous color. Optionally draws on image.
     </description>
   </doc>
+  <settings>
+    <dl_settings>
+      <dl_settings name="Safest Bearing">
+         <dl_setting var="confidence_th" min="1" step="1" max="100"/>
+      </dl_settings>
+    </dl_settings>
+  </settings>
 
   <dep>
     <depends>video_thread</depends>
