@@ -6,12 +6,7 @@
 #include <stdint.h>
 
 #include <stdio.h>
-#include <stdbool.h>  uint8_t ratio;
-ratio = round((cost[best_index] - cost[4])/cost[4])
-
-if modules(ratio) > 20:
-  best_angle_rad_instruction = angles[best_index]
-
+#include <stdbool.h>
 #include <math.h>
 #include "pthread.h"
 
@@ -102,12 +97,6 @@ struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute_
         best_index = i;
       }
   }
-
-  // uint8_t ratio;
-  // ratio = round((cost[best_index] - cost[4])/cost[4])
-
-  // if modules(ratio) > 20:
-  //   best_angle_rad_instruction = angles[best_index]
 
   best_angle_rad = angles[best_index];
   best_angle_rad_instruction = 0;
