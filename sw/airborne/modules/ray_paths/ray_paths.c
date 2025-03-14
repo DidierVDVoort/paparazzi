@@ -98,12 +98,6 @@ struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute_
       }
   }
 
-  // uint8_t ratio;
-  // ratio = round((cost[best_index] - cost[4])/cost[4])
-
-  // if modules(ratio) > 20:
-  //   best_angle_rad_instruction = angles[best_index]
-
   best_angle_rad = angles[best_index];
   best_angle_rad_instruction = 0;
   static float prev1 = -1, prev2 = -1;
