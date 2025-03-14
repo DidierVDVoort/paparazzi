@@ -73,6 +73,7 @@
       <define name="RAY_PATH_FINDER_GREEN_DRAW" value="0"/>
       <define name="RAY_PATH_FINDER_ORANGE_DRAW" value="0"/>
     </module>
+    <module name="ray_paths_calibration"/>
     <module name="orange_avoider">
       <define name="ORANGE_AVOIDER_VISUAL_DETECTION_ID" value="COLOR_OBJECT_DETECTION1_ID"/>
     </module>

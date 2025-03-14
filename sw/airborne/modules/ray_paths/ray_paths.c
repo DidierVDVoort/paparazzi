@@ -27,9 +27,6 @@ uint8_t lum_or = 0;
 uint8_t cb_or = 0;
 uint8_t cr_or = 0;
 
-bool green_draw = false;
-bool orange_draw = false;
-
 float best_angle_rad = 0;
 float best_angle_rad_instruction = 0;
 
@@ -130,18 +127,12 @@ void ray_paths_init(void)
     cr_gr = RAY_PATH_FINDER_GREEN_CR;
     margin_gr = RAY_PATH_FINDER_GREEN_MARGIN;
   #endif
-  #ifdef RAY_PATH_FINDER_GREEN_DRAW
-    green_draw = RAY_PATH_FINDER_GREEN_DRAW;
-  #endif
 
   #ifdef RAY_PATH_FINDER_ORANGE_LUM
     lum_or = RAY_PATH_FINDER_ORANGE_LUM;
     cb_or = RAY_PATH_FINDER_ORANGE_CB;
     cr_or = RAY_PATH_FINDER_ORANGE_CR;
     margin_or = RAY_PATH_FINDER_ORANGE_MARGIN;
-  #endif
-  #ifdef RAY_PATH_FINDER_ORANGE_DRAW
-    orange_draw = RAY_PATH_FINDER_ORANGE_DRAW;
   #endif
 
   cv_add_to_device(&RAY_PATH_FINDER_CAMERA1, random_draw1, RAY_PATH_FINDER_FPS1, 0);
@@ -151,7 +142,6 @@ void ray_paths_init(void)
 
 int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction, float best_angle_rad)
 {
-  uint8_t draw = 1;
   int16_t cost = 0;
   uint8_t *buffer = img->buf;
 

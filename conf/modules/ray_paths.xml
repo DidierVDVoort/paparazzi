@@ -13,28 +13,29 @@
     <define name="RAY_PATH_FINDER_GREEN_CB" value="0" description="Green mean blue chroma"/>
     <define name="RAY_PATH_FINDER_GREEN_CR" value="0" description="Green mean red chroma"/>
     <define name="RAY_PATH_FINDER_GREEN_MARGIN" value="0" description="Green margin around mean"/>
-    <define name="RAY_PATH_FINDER_GREEN_DRAW" value="FALSE|TRUE" description="Whether or not to draw on image"/>
+    <!-- <define name="RAY_PATH_FINDER_GREEN_DRAW" value="FALSE|TRUE" description="Whether or not to draw on image"/> -->
 
     <define name="RAY_PATH_FINDER_ORANGE_LUM" value="0" description="Orange mean luminance"/>
     <define name="RAY_PATH_FINDER_ORANGE_CB" value="0" description="Orange mean blue chroma"/>
     <define name="RAY_PATH_FINDER_ORANGE_CR" value="0" description="Orange mean red chroma"/>
     <define name="RAY_PATH_FINDER_ORANGE_MARGIN" value="0" description="Orange margin around mean"/>
-    <define name="RAY_PATH_FINDER_ORANGE_DRAW" value="FALSE|TRUE" description="Whether or not to draw on image"/>
+    <!-- <define name="RAY_PATH_FINDER_ORANGE_DRAW" value="FALSE|TRUE" description="Whether or not to draw on image"/> -->
   </doc>
 
   <settings>
     <dl_settings>
       <dl_settings name="RayPathFinder">
+        <dl_setting var="calibration_mode" min="0" step="1" max="1" values="False|True" shortname="calibration mode"/>
         <dl_setting var="lum_gr" min="0" step="1" max="255" shortname="green_y"/>
         <dl_setting var="cb_gr" min="0" step="1" max="255" shortname="green_u"/>
         <dl_setting var="cr_gr" min="0" step="1" max="255" shortname="green_v"/>
         <dl_setting var="margin_gr" min="0" step="1" max="255" shortname="green_margin"/>
-        <dl_setting var="green_draw" min="0" step="1" max="1" values="False|True" shortname="draw green"/>
+        <!-- <dl_setting var="green_draw" min="0" step="1" max="1" values="False|True" shortname="draw green"/> -->
         <dl_setting var="lum_or" min="0" step="1" max="255" shortname="orange_y"/>
         <dl_setting var="cb_or" min="0" step="1" max="255" shortname="orange_u"/>
         <dl_setting var="cr_or" min="0" step="1" max="255" shortname="orange_v"/>
         <dl_setting var="margin_or" min="0" step="1" max="255" shortname="orange_margin"/>
-        <dl_setting var="orange_draw" min="0" step="1" max="1" values="False|True" shortname="draw orange"/>
+        <!-- <dl_setting var="orange_draw" min="0" step="1" max="1" values="False|True" shortname="draw orange"/> -->
       </dl_settings>
     </dl_settings>
   </settings>
