@@ -20,6 +20,18 @@
     <define name="RAY_PATH_FINDER_ORANGE_CR" value="0" description="Orange mean red chroma"/>
     <define name="RAY_PATH_FINDER_ORANGE_MARGIN" value="0" description="Orange margin around mean"/>
     <define name="RAY_PATH_FINDER_ORANGE_DRAW" value="FALSE|TRUE" description="Whether or not to draw on image"/>
+
+    <define name="RAY_PATH_FINDER_PURPLE_LUM" value="0" description="Purple mean luminance"/>
+    <define name="RAY_PATH_FINDER_PURPLE_CB" value="0" description="Purple mean blue chroma"/>
+    <define name="RAY_PATH_FINDER_PURPLE_CR" value="0" description="Purple mean red chroma"/>
+    <define name="RAY_PATH_FINDER_PURPLE_MARGIN" value="0" description="Purple margin around mean"/>
+    <define name="RAY_PATH_FINDER_PURPLE_DRAW" value="FALSE|TRUE" description="Whether or not to draw on image"/>
+
+    <define name="RAY_PATH_FINDER_BROWN_LUM" value="0" description="Brown mean luminance"/>
+    <define name="RAY_PATH_FINDER_BROWN_CB" value="0" description="Brown mean blue chroma"/>
+    <define name="RAY_PATH_FINDER_BROWN_CR" value="0" description="Brown mean red chroma"/>
+    <define name="RAY_PATH_FINDER_BROWN_MARGIN" value="0" description="Brown margin around mean"/>
+    <define name="RAY_PATH_FINDER_BROWN_DRAW" value="FALSE|TRUE" description="Whether or not to draw on image"/>
   </doc>
 
   <settings>
@@ -35,6 +47,16 @@
         <dl_setting var="cr_or" min="0" step="1" max="255" shortname="orange_v"/>
         <dl_setting var="margin_or" min="0" step="1" max="255" shortname="orange_margin"/>
         <dl_setting var="orange_draw" min="0" step="1" max="1" values="False|True" shortname="draw orange"/>
+        <dl_setting var="lum_pp" min="0" step="1" max="255" shortname="purple_y"/>
+        <dl_setting var="cb_pp" min="0" step="1" max="255" shortname="purple_u"/>
+        <dl_setting var="cr_pp" min="0" step="1" max="255" shortname="purple_v"/>
+        <dl_setting var="margin_pp" min="0" step="1" max="255" shortname="purple_margin"/>
+        <dl_setting var="purple_draw" min="0" step="1" max="1" values="False|True" shortname="draw purple"/>
+        <dl_setting var="lum_br" min="0" step="1" max="255" shortname="brown_y"/>
+        <dl_setting var="cb_br" min="0" step="1" max="255" shortname="brown_u"/>
+        <dl_setting var="cr_br" min="0" step="1" max="255" shortname="brown_v"/>
+        <dl_setting var="margin_br" min="0" step="1" max="255" shortname="brown_margin"/>
+        <dl_setting var="brown_draw" min="0" step="1" max="1" values="False|True" shortname="draw brown"/>
       </dl_settings>
     </dl_settings>
   </settings>
