@@ -27,6 +27,21 @@ uint8_t lum_or = 0;
 uint8_t cb_or = 0;
 uint8_t cr_or = 0;
 
+uint8_t margin_pp = 0;
+uint8_t lum_pp = 0;
+uint8_t cb_pp = 0;
+uint8_t cr_pp = 0;
+
+uint8_t margin_br = 0;
+uint8_t lum_br = 0;
+uint8_t cb_br = 0;
+uint8_t cr_br = 0;
+
+bool green_draw = false;
+bool orange_draw = false;
+bool purple_draw = false;
+bool brown_draw = false;
+
 float best_angle_rad = 0;
 float best_angle_rad_instruction = 0;
 
@@ -83,6 +98,12 @@ struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute_
       }
   }
 
+  // uint8_t ratio;
+  // ratio = round((cost[best_index] - cost[4])/cost[4])
+
+  // if modules(ratio) > 20:
+  //   best_angle_rad_instruction = angles[best_index]
+
   best_angle_rad = angles[best_index];
   best_angle_rad_instruction = 0;
   static float prev1 = -1, prev2 = -1;
@@ -127,6 +148,9 @@ void ray_paths_init(void)
     cr_gr = RAY_PATH_FINDER_GREEN_CR;
     margin_gr = RAY_PATH_FINDER_GREEN_MARGIN;
   #endif
+  #ifdef RAY_PATH_FINDER_GREEN_DRAW
+    green_draw = RAY_PATH_FINDER_GREEN_DRAW;
+  #endif
 
   #ifdef RAY_PATH_FINDER_ORANGE_LUM
     lum_or = RAY_PATH_FINDER_ORANGE_LUM;
@@ -134,6 +158,29 @@ void ray_paths_init(void)
     cr_or = RAY_PATH_FINDER_ORANGE_CR;
     margin_or = RAY_PATH_FINDER_ORANGE_MARGIN;
   #endif
+  #ifdef RAY_PATH_FINDER_ORANGE_DRAW
+    orange_draw = RAY_PATH_FINDER_ORANGE_DRAW;
+  #endif
+
+  #ifdef RAY_PATH_FINDER_PURPLE_LUM
+  lum_pp = RAY_PATH_FINDER_PURPLE_LUM;
+  cb_pp = RAY_PATH_FINDER_PURPLE_CB;
+  cr_pp = RAY_PATH_FINDER_PURPLE_CR;
+  margin_pp = RAY_PATH_FINDER_PURPLE_MARGIN;
+#endif
+#ifdef RAY_PATH_FINDER_PURPLE_DRAW
+  purple_draw = RAY_PATH_FINDER_PURPLE_DRAW;
+#endif
+
+#ifdef RAY_PATH_FINDER_BROWN_LUM
+lum_br = RAY_PATH_FINDER_BROWN_LUM;
+cb_br = RAY_PATH_FINDER_BROWN_CB;
+cr_br = RAY_PATH_FINDER_BROWN_CR;
+margin_br = RAY_PATH_FINDER_BROWN_MARGIN;
+#endif
+#ifdef RAY_PATH_FINDER_BROWN_DRAW
+brown_draw = RAY_PATH_FINDER_BROWN_DRAW;
+#endif
 
   cv_add_to_device(&RAY_PATH_FINDER_CAMERA1, random_draw1, RAY_PATH_FINDER_FPS1, 0);
 }
@@ -160,6 +207,22 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
   uint8_t cb_max_or = cb_or + margin_or;
   uint8_t cr_min_or = cr_or - margin_or;
   uint8_t cr_max_or = cr_or + margin_or;
+
+  // Definitions of the colour purple
+  uint8_t lum_min_pp = lum_pp - margin_pp;
+  uint8_t lum_max_pp = lum_pp + margin_pp;
+  uint8_t cb_min_pp = cb_pp - margin_pp;
+  uint8_t cb_max_pp = cb_pp + margin_pp;
+  uint8_t cr_min_pp = cr_pp - margin_pp;
+  uint8_t cr_max_pp = cr_pp + margin_pp;
+
+      // Definitions of the colour brown
+  uint8_t lum_min_br = lum_br - margin_br;
+  uint8_t lum_max_br = lum_br + margin_br;
+  uint8_t cb_min_br = cb_br - margin_br;
+  uint8_t cb_max_br = cb_br + margin_br;
+  uint8_t cr_min_br = cr_br - margin_br;
+  uint8_t cr_max_br = cr_br + margin_br;
 
 
   // x is vertical, y is horizontal
@@ -211,9 +274,6 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
       (*vp >= cr_min_gr ) && (*vp <= cr_max_gr )) 
       {
         cost -= weight;
-        // if (draw) {
-        //   *yp = 255;
-        // }
       } 
       
       // Increase cost when orange is near to drone
@@ -222,22 +282,32 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
       (*vp >= cr_min_or ) && (*vp <= cr_max_or )) 
       {
         cost += 5*weight;
-        // if (draw) {
-        //   *yp = 128;
-        // }
+      } 
+
+      // Increase cost when purple is near to drone
+      if ( (*yp >= lum_min_pp) && (*yp <= lum_max_pp) &&
+      (*up >= cb_min_pp ) && (*up <= cb_max_pp ) &&
+      (*vp >= cr_min_pp ) && (*vp <= cr_max_pp )) 
+      {
+        cost += 2*weight;
+      } 
+
+      // Increase cost when brown is near to drone
+      if ( (*yp >= lum_min_br) && (*yp <= lum_max_br) &&
+      (*up >= cb_min_br ) && (*up <= cb_max_br ) &&
+      (*vp >= cr_min_br ) && (*vp <= cr_max_br )) 
+      {
+        cost += 2*weight;
       } 
     }
   }
   // Normalization
   cost = round(cost*100/ num_pixels_line);
 
-  // Prefer going straight over turning
-  if (alpha == 0){
-    cost -= 10;
-  }
+
   // Prefer inertia
   if (alpha == best_angle_rad){
-    cost -= 20;
+    cost -= 10;
   }
 
   
