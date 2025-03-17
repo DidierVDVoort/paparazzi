@@ -24,6 +24,10 @@
     <waypoint lat="51.9906405" lon="4.3767316" name="_OZ2"/>
     <waypoint lat="51.9906687" lon="4.3768025" name="_OZ3"/>
     <waypoint lat="51.9906273" lon="4.3768438" name="_OZ4"/>
+    <waypoint lat="51.9905920" lon="4.3767737" name="FZ1"/>
+    <waypoint lat="51.9906423" lon="4.3767188" name="FZ2"/>
+    <waypoint lat="51.9906774" lon="4.3768053" name="FZ3"/>
+    <waypoint lat="51.9906255" lon="4.3768583" name="FZ4"/>
   </waypoints>
   <sectors>
     <sector color="red" name="CyberZoo">
@@ -37,6 +41,12 @@
       <corner name="_OZ2"/>
       <corner name="_OZ3"/>
       <corner name="_OZ4"/>
+    </sector>
+    <sector color="#2ea5d9" name="FlightZone">
+      <corner name="FZ1"/>
+      <corner name="FZ2"/>
+      <corner name="FZ3"/>
+      <corner name="FZ4"/>
     </sector>
   </sectors>
   <exceptions>

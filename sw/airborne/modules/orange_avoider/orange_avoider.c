@@ -115,7 +115,7 @@ void orange_avoider_periodic(void)
     case SAFE:
       // Move waypoint forward
       moveWaypointForward(WP_TRAJECTORY, 1.5f * moveDistance);
-      if (!InsideObstacleZone(WaypointX(WP_TRAJECTORY),WaypointY(WP_TRAJECTORY))){
+      if (!InsideFlightZone(WaypointX(WP_TRAJECTORY),WaypointY(WP_TRAJECTORY))){
         navigation_state = OUT_OF_BOUNDS;
       } else if (heading_setpoint > 0){
         fprintf(stderr, "RIGHT: Heading setpoint: %d\n", heading_setpoint);
@@ -146,7 +146,7 @@ void orange_avoider_periodic(void)
       moveWaypointForward(WP_TRAJECTORY, 1.5f);
       moveWaypointForward(WP_RETREAT, -1.0f);
 
-      if (InsideObstacleZone(WaypointX(WP_TRAJECTORY),WaypointY(WP_TRAJECTORY))){
+      if (InsideFlightZone(WaypointX(WP_TRAJECTORY),WaypointY(WP_TRAJECTORY))){
         // add offset to head back into arena
         increase_nav_heading(heading_increment);
 
