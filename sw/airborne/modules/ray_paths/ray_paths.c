@@ -17,64 +17,45 @@ static pthread_mutex_t mutex;
 #endif
 
 // Filter Settings
-uint8_t margin_gr = 0;
-uint8_t lum_gr = 0;
-uint8_t cb_gr = 0;
-uint8_t cr_gr = 0;
 
-uint8_t margin_or = 0;
-uint8_t lum_or = 0;
-uint8_t cb_or = 0;
-uint8_t cr_or = 0;
 
-uint8_t margin_pp = 0;
-uint8_t lum_pp = 0;
-uint8_t cb_pp = 0;
-uint8_t cr_pp = 0;
+ColorSettings green = {0, 0, 0, 0, false};
+ColorSettings orange = {0, 0, 0, 0, false};
+ColorSettings purple = {0, 0, 0, 0, false};
+ColorSettings brown = {0, 0, 0, 0, false};
 
-uint8_t margin_br = 0;
-uint8_t lum_br = 0;
-uint8_t cb_br = 0;
-uint8_t cr_br = 0;
-
-bool green_draw = false;
-bool orange_draw = false;
-bool purple_draw = false;
-bool brown_draw = false;
 
 float best_angle_rad = 0;
 float best_angle_rad_instruction = 0;
+uint8_t best_index = 0;
 
-// Function
+// Define cost function
 int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction, float best_angle_rad);
 void draw_best_line(struct image_t *img, float alpha, float entry_point_fraction);
 
-struct image_t *random_draw1(struct image_t *img, uint8_t camera_id);
 struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute__((unused)))
 {
-  float angles[] = {
-    72.65f * (float)M_PI / 180.0f,
-    67.38f * (float)M_PI / 180.0f,
-    57.99f * (float)M_PI / 180.0f,
-    38.66f * (float)M_PI / 180.0f,
-    0,
-    -38.66f * (float)M_PI / 180.0f,
-    -57.99f * (float)M_PI / 180.0f,
-    -67.38f * (float)M_PI / 180.0f,
-    -72.65f * (float)M_PI / 180.0f
+  static const float angles[] = {
+    72.65f, 67.38f, 57.99f, 38.66f, 0, -38.66f, -57.99f, -67.38f, -72.65f
   };
 
-  float entry_point_fractions[] = {-0.115f, 0.03846f, 0.1923f, 0.34615f, 0.5f, 0.65385f, 0.8077f, 0.961538f, 1.115f};
-  int16_t costs[9];
-  int16_t min_cost = 32767;
-  uint8_t best_index = 0;
+  static const float entry_point_fractions[] = {
+    -0.115f, 0.03846f, 0.1923f, 0.34615f, 0.5f, 0.65385f, 0.8077f, 0.961538f, 1.115f
+  };
+
 
   pthread_mutex_lock(&mutex);
+  int16_t costs[9]; //Initialise cost matrix for 9 rays
+  int16_t min_cost = INT16_MAX;
+  
+  best_angle_rad_instruction = 0;
+
+  // Loop over nine rays and determine the cost from cost function for all nine rays
   for (int i =0; i <9; i++){
-    costs[i] = cost_function(img, angles[i], entry_point_fractions[i], best_angle_rad);
+    costs[i] = cost_function(img, angles[i] * (float)M_PI / 180.0f, entry_point_fractions[i], best_angle_rad);
   }
 
-  int16_t filtered_costs[9];  // Temporary array for filtered values
+  int16_t filtered_costs[9];  // Initialise temporary cost matrix in which values from the filtered cost function are stored. 
 
   for (int i = 0; i < 9; i++) {
       if (i == 0) {
@@ -94,19 +75,15 @@ struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute_
       costs[i] = filtered_costs[i];
       if (costs[i] < min_cost){
         min_cost = costs[i];
-        best_index = i;
+        best_index = i; // Best angle is determined based on ray that has the lowest cost
       }
   }
 
-  best_angle_rad = angles[best_index];
-  best_angle_rad_instruction = 0;
-  static float prev1 = -1, prev2 = -1;
+  best_angle_rad = angles[best_index] * (float)M_PI / 180.0f;
+ 
+  uint16_t ratio = (costs[4] != 0) ? (uint16_t)(fabs((costs[best_index] - costs[4]) / (double)costs[4]) * 100.0) : 0;
 
-
-  prev2 = prev1;
-  prev1 = best_angle_rad;
-
-  if (prev1 == prev2){
+  if (ratio > 30){
     best_angle_rad_instruction = best_angle_rad;
   }
 
@@ -137,92 +114,106 @@ void ray_paths_init(void)
   #endif
   
   #ifdef RAY_PATH_FINDER_GREEN_LUM
-    lum_gr = RAY_PATH_FINDER_GREEN_LUM;
-    cb_gr = RAY_PATH_FINDER_GREEN_CB;
-    cr_gr = RAY_PATH_FINDER_GREEN_CR;
-    margin_gr = RAY_PATH_FINDER_GREEN_MARGIN;
-  #endif
-  #ifdef RAY_PATH_FINDER_GREEN_DRAW
-    green_draw = RAY_PATH_FINDER_GREEN_DRAW;
-  #endif
+  green.lum = RAY_PATH_FINDER_GREEN_LUM;
+  green.cb = RAY_PATH_FINDER_GREEN_CB;
+  green.cr = RAY_PATH_FINDER_GREEN_CR;
+  green.margin = RAY_PATH_FINDER_GREEN_MARGIN;
+#endif
+#ifdef RAY_PATH_FINDER_GREEN_DRAW
+  green.draw = RAY_PATH_FINDER_GREEN_DRAW;
+#endif
 
-  #ifdef RAY_PATH_FINDER_ORANGE_LUM
-    lum_or = RAY_PATH_FINDER_ORANGE_LUM;
-    cb_or = RAY_PATH_FINDER_ORANGE_CB;
-    cr_or = RAY_PATH_FINDER_ORANGE_CR;
-    margin_or = RAY_PATH_FINDER_ORANGE_MARGIN;
-  #endif
-  #ifdef RAY_PATH_FINDER_ORANGE_DRAW
-    orange_draw = RAY_PATH_FINDER_ORANGE_DRAW;
-  #endif
+#ifdef RAY_PATH_FINDER_ORANGE_LUM
+  orange.lum = RAY_PATH_FINDER_ORANGE_LUM;
+  orange.cb = RAY_PATH_FINDER_ORANGE_CB;
+  orange.cr = RAY_PATH_FINDER_ORANGE_CR;
+  orange.margin = RAY_PATH_FINDER_ORANGE_MARGIN;
+#endif
+#ifdef RAY_PATH_FINDER_ORANGE_DRAW
+  orange.draw = RAY_PATH_FINDER_ORANGE_DRAW;
+#endif
 
-  #ifdef RAY_PATH_FINDER_PURPLE_LUM
-  lum_pp = RAY_PATH_FINDER_PURPLE_LUM;
-  cb_pp = RAY_PATH_FINDER_PURPLE_CB;
-  cr_pp = RAY_PATH_FINDER_PURPLE_CR;
-  margin_pp = RAY_PATH_FINDER_PURPLE_MARGIN;
+#ifdef RAY_PATH_FINDER_PURPLE_LUM
+  purple.lum = RAY_PATH_FINDER_PURPLE_LUM;
+  purple.cb = RAY_PATH_FINDER_PURPLE_CB;
+  purple.cr = RAY_PATH_FINDER_PURPLE_CR;
+  purple.margin = RAY_PATH_FINDER_PURPLE_MARGIN;
 #endif
 #ifdef RAY_PATH_FINDER_PURPLE_DRAW
-  purple_draw = RAY_PATH_FINDER_PURPLE_DRAW;
+  purple.draw = RAY_PATH_FINDER_PURPLE_DRAW;
 #endif
 
 #ifdef RAY_PATH_FINDER_BROWN_LUM
-lum_br = RAY_PATH_FINDER_BROWN_LUM;
-cb_br = RAY_PATH_FINDER_BROWN_CB;
-cr_br = RAY_PATH_FINDER_BROWN_CR;
-margin_br = RAY_PATH_FINDER_BROWN_MARGIN;
+  brown.lum = RAY_PATH_FINDER_BROWN_LUM;
+  brown.cb = RAY_PATH_FINDER_BROWN_CB;
+  brown.cr = RAY_PATH_FINDER_BROWN_CR;
+  brown.margin = RAY_PATH_FINDER_BROWN_MARGIN;
 #endif
 #ifdef RAY_PATH_FINDER_BROWN_DRAW
-brown_draw = RAY_PATH_FINDER_BROWN_DRAW;
+  brown.draw = RAY_PATH_FINDER_BROWN_DRAW;
 #endif
 
   cv_add_to_device(&RAY_PATH_FINDER_CAMERA1, random_draw1, RAY_PATH_FINDER_FPS1, 0);
 }
 
+int16_t compute_texture_score(uint8_t *buffer, int width, int height, int x, int y){
+  int window_size = 3;
+  int half_window = window_size / 2;
+  uint8_t min_y = 255, max_y = 0; // Initialize min/max values
+  for (int dx = -half_window; dx <= half_window; dx++) {
+    for (int dy = -half_window; dy <= half_window; dy++) {
+        int nx = x + dx;
+        int ny = y + dy;
+        
+        if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue; // Boundary check
+        
+        uint8_t y_value = buffer[ny * width * 2 + 2 * nx + 1]; // Extract Y component
+        
+        if (y_value < min_y) min_y = y_value;
+        if (y_value > max_y) max_y = y_value;
+    }
+}
 
+return max_y - min_y; 
+}
 
 int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction, float best_angle_rad)
 {
+  int16_t num_pixels_line = 0;
   int16_t cost = 0;
   uint8_t *buffer = img->buf;
-
-  // Definitions of the colour green
-  uint8_t lum_min_gr = lum_gr - margin_gr;
-  uint8_t lum_max_gr = lum_gr + margin_gr;
-  uint8_t cb_min_gr = cb_gr - margin_gr;
-  uint8_t cb_max_gr = cb_gr + margin_gr;
-  uint8_t cr_min_gr = cr_gr - margin_gr;
-  uint8_t cr_max_gr = cr_gr + margin_gr;
-
-  // Definitions of the colour orange
-  uint8_t lum_min_or = lum_or - margin_or;
-  uint8_t lum_max_or = lum_or + margin_or;
-  uint8_t cb_min_or = cb_or - margin_or;
-  uint8_t cb_max_or = cb_or + margin_or;
-  uint8_t cr_min_or = cr_or - margin_or;
-  uint8_t cr_max_or = cr_or + margin_or;
-
-  // Definitions of the colour purple
-  uint8_t lum_min_pp = lum_pp - margin_pp;
-  uint8_t lum_max_pp = lum_pp + margin_pp;
-  uint8_t cb_min_pp = cb_pp - margin_pp;
-  uint8_t cb_max_pp = cb_pp + margin_pp;
-  uint8_t cr_min_pp = cr_pp - margin_pp;
-  uint8_t cr_max_pp = cr_pp + margin_pp;
-
-      // Definitions of the colour brown
-  uint8_t lum_min_br = lum_br - margin_br;
-  uint8_t lum_max_br = lum_br + margin_br;
-  uint8_t cb_min_br = cb_br - margin_br;
-  uint8_t cb_max_br = cb_br + margin_br;
-  uint8_t cr_min_br = cr_br - margin_br;
-  uint8_t cr_max_br = cr_br + margin_br;
-
-
-  // x is vertical, y is horizontal
-  int16_t num_pixels_line = 0;
-  // Compute the slope using the given angle
+  int width = img->w, height = img->h;
   float slope = tan(alpha);
+
+    // Define color ranges
+    uint8_t lum_min_gr = green.lum - green.margin;
+    uint8_t lum_max_gr = green.lum + green.margin;
+    uint8_t cb_min_gr = green.cb - green.margin;
+    uint8_t cb_max_gr = green.cb + green.margin;
+    uint8_t cr_min_gr = green.cr - green.margin;
+    uint8_t cr_max_gr = green.cr + green.margin;
+
+    uint8_t lum_min_or = orange.lum - orange.margin;
+    uint8_t lum_max_or = orange.lum + orange.margin;
+    uint8_t cb_min_or = orange.cb - orange.margin;
+    uint8_t cb_max_or = orange.cb + orange.margin;
+    uint8_t cr_min_or = orange.cr - orange.margin;
+    uint8_t cr_max_or = orange.cr + orange.margin;
+
+    uint8_t lum_min_pp = purple.lum - purple.margin;
+    uint8_t lum_max_pp = purple.lum + purple.margin;
+    uint8_t cb_min_pp = purple.cb - purple.margin;
+    uint8_t cb_max_pp = purple.cb + purple.margin;
+    uint8_t cr_min_pp = purple.cr - purple.margin;
+    uint8_t cr_max_pp = purple.cr + purple.margin;
+
+    uint8_t lum_min_br = brown.lum - brown.margin;
+    uint8_t lum_max_br = brown.lum + brown.margin;
+    uint8_t cb_min_br = brown.cb - brown.margin;
+    uint8_t cb_max_br = brown.cb + brown.margin;
+    uint8_t cr_min_br = brown.cr - brown.margin;
+    uint8_t cr_max_br = brown.cr + brown.margin;
+
 
   // Loop through half of x-values
   for (uint16_t x = 0; x < 101; x++) {
@@ -265,9 +256,11 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
       // Decrease cost when green is close to drone
       if ( (*yp >= lum_min_gr) && (*yp <= lum_max_gr) &&
       (*up >= cb_min_gr ) && (*up <= cb_max_gr ) &&
-      (*vp >= cr_min_gr ) && (*vp <= cr_max_gr )) 
+      (*vp >= cr_min_gr ) && (*vp <= cr_max_gr ))
+     
       {
-        cost -= weight;
+        int texture_score = compute_texture_score(buffer, width, height, x, y);
+        if (texture_score < 20) cost -= weight;
       } 
       
       // Increase cost when orange is near to drone

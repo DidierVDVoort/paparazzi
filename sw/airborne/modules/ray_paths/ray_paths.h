@@ -5,30 +5,21 @@
 #include <stdbool.h>
 
 // Filter Settings
-extern uint8_t margin_gr;
-extern uint8_t lum_gr;
-extern uint8_t cb_gr;
-extern uint8_t cr_gr;
+typedef struct {
+  uint8_t margin;
+  uint8_t lum;
+  uint8_t cb;
+  uint8_t cr;
+  bool draw;
+} ColorSettings;
 
-extern uint8_t margin_or;
-extern uint8_t lum_or;
-extern uint8_t cb_or;
-extern uint8_t cr_or;
+extern ColorSettings green;
+extern ColorSettings orange;
+extern ColorSettings purple;
+extern ColorSettings brown;
 
-extern uint8_t margin_pp;
-extern uint8_t lum_pp;
-extern uint8_t cb_pp;
-extern uint8_t cr_pp;
-
-extern uint8_t margin_br;
-extern uint8_t lum_br;
-extern uint8_t cb_br;
-extern uint8_t cr_br;
-
-extern bool green_draw;
-extern bool orange_draw;
-extern bool purple_draw;
-extern bool brown_draw;
+extern float best_angle_rad;
+extern float best_angle_rad_instruction;
 
 // Module functions
 extern void ray_paths_init(void);

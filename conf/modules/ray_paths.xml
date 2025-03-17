@@ -34,30 +34,29 @@
     <!-- <define name="RAY_PATH_FINDER_BROWN_DRAW" value="FALSE|TRUE" description="Whether or not to draw on image"/> -->
   </doc>
 
-  <settings>
+ <settings>
     <dl_settings>
       <dl_settings name="RayPathFinder">
-        <dl_setting var="calibration_mode" min="0" step="1" max="1" values="False|True" shortname="calibration mode"/>
-        <dl_setting var="lum_gr" min="0" step="1" max="255" shortname="green_y"/>
-        <dl_setting var="cb_gr" min="0" step="1" max="255" shortname="green_u"/>
-        <dl_setting var="cr_gr" min="0" step="1" max="255" shortname="green_v"/>
-        <dl_setting var="margin_gr" min="0" step="1" max="255" shortname="green_margin"/>
-        <!-- <dl_setting var="green_draw" min="0" step="1" max="1" values="False|True" shortname="draw green"/> -->
-        <dl_setting var="lum_or" min="0" step="1" max="255" shortname="orange_y"/>
-        <dl_setting var="cb_or" min="0" step="1" max="255" shortname="orange_u"/>
-        <dl_setting var="cr_or" min="0" step="1" max="255" shortname="orange_v"/>
-        <dl_setting var="margin_or" min="0" step="1" max="255" shortname="orange_margin"/>
-        <!-- <dl_setting var="orange_draw" min="0" step="1" max="1" values="False|True" shortname="draw orange"/> -->
-        <dl_setting var="lum_pp" min="0" step="1" max="255" shortname="purple_y"/>
-        <dl_setting var="cb_pp" min="0" step="1" max="255" shortname="purple_u"/>
-        <dl_setting var="cr_pp" min="0" step="1" max="255" shortname="purple_v"/>
-        <dl_setting var="margin_pp" min="0" step="1" max="255" shortname="purple_margin"/>
-        <!-- <dl_setting var="purple_draw" min="0" step="1" max="1" values="False|True" shortname="draw purple"/> -->
-        <dl_setting var="lum_br" min="0" step="1" max="255" shortname="brown_y"/>
-        <dl_setting var="cb_br" min="0" step="1" max="255" shortname="brown_u"/>
-        <dl_setting var="cr_br" min="0" step="1" max="255" shortname="brown_v"/>
-        <dl_setting var="margin_br" min="0" step="1" max="255" shortname="brown_margin"/>
-        <!-- <dl_setting var="brown_draw" min="0" step="1" max="1" values="False|True" shortname="draw brown"/> -->
+        <dl_setting var="green.lum" min="0" step="1" max="255" shortname="green_y"/>
+        <dl_setting var="green.cb" min="0" step="1" max="255" shortname="green_u"/>
+        <dl_setting var="green.cr" min="0" step="1" max="255" shortname="green_v"/>
+        <dl_setting var="green.margin" min="0" step="1" max="255" shortname="green_margin"/>
+        <dl_setting var="green.draw" min="0" step="1" max="1" values="False|True" shortname="draw green"/>
+        <dl_setting var="orange.lum" min="0" step="1" max="255" shortname="orange_y"/>
+        <dl_setting var="orange.cb" min="0" step="1" max="255" shortname="orange_u"/>
+        <dl_setting var="orange.cr" min="0" step="1" max="255" shortname="orange_v"/>
+        <dl_setting var="orange.margin" min="0" step="1" max="255" shortname="orange_margin"/>
+        <dl_setting var="orange.draw" min="0" step="1" max="1" values="False|True" shortname="draw orange"/>
+        <dl_setting var="purple.lum" min="0" step="1" max="255" shortname="purple_y"/>
+        <dl_setting var="purple.cb" min="0" step="1" max="255" shortname="purple_u"/>
+        <dl_setting var="purple.cr" min="0" step="1" max="255" shortname="purple_v"/>
+        <dl_setting var="purple.margin" min="0" step="1" max="255" shortname="purple_margin"/>
+        <dl_setting var="purple.draw" min="0" step="1" max="1" values="False|True" shortname="draw purple"/>
+        <dl_setting var="brown.lum" min="0" step="1" max="255" shortname="brown_y"/>
+        <dl_setting var="brown.cb" min="0" step="1" max="255" shortname="brown_u"/>
+        <dl_setting var="brown.cr" min="0" step="1" max="255" shortname="brown_v"/>
+        <dl_setting var="brown.margin" min="0" step="1" max="255" shortname="brown_margin"/>
+        <dl_setting var="brown.draw" min="0" step="1" max="1" values="False|True" shortname="draw brown"/>
       </dl_settings>
     </dl_settings>
   </settings>
