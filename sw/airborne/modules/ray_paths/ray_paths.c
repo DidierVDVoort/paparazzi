@@ -32,7 +32,9 @@ uint8_t best_index = 0;
 // Define cost function
 int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction, float best_angle_rad);
 void draw_best_line(struct image_t *img, float alpha, float entry_point_fraction);
+int16_t compute_texture_score(uint8_t *buffer, int width, int height, int x, int y);
 
+struct image_t *random_draw1(struct image_t *img, uint8_t camera_id);
 struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute__((unused)))
 {
   static const float angles[] = {
