@@ -13,25 +13,21 @@
     <define name="RAY_PATH_FINDER_GREEN_CB" value="0" description="Green mean blue chroma"/>
     <define name="RAY_PATH_FINDER_GREEN_CR" value="0" description="Green mean red chroma"/>
     <define name="RAY_PATH_FINDER_GREEN_MARGIN" value="0" description="Green margin around mean"/>
-    <!-- <define name="RAY_PATH_FINDER_GREEN_DRAW" value="FALSE|TRUE" description="Whether or not to draw on image"/> -->
 
     <define name="RAY_PATH_FINDER_ORANGE_LUM" value="0" description="Orange mean luminance"/>
     <define name="RAY_PATH_FINDER_ORANGE_CB" value="0" description="Orange mean blue chroma"/>
     <define name="RAY_PATH_FINDER_ORANGE_CR" value="0" description="Orange mean red chroma"/>
     <define name="RAY_PATH_FINDER_ORANGE_MARGIN" value="0" description="Orange margin around mean"/>
-    <!-- <define name="RAY_PATH_FINDER_ORANGE_DRAW" value="FALSE|TRUE" description="Whether or not to draw on image"/> -->
 
     <define name="RAY_PATH_FINDER_PURPLE_LUM" value="0" description="Purple mean luminance"/>
     <define name="RAY_PATH_FINDER_PURPLE_CB" value="0" description="Purple mean blue chroma"/>
     <define name="RAY_PATH_FINDER_PURPLE_CR" value="0" description="Purple mean red chroma"/>
     <define name="RAY_PATH_FINDER_PURPLE_MARGIN" value="0" description="Purple margin around mean"/>
-    <!-- <define name="RAY_PATH_FINDER_PURPLE_DRAW" value="FALSE|TRUE" description="Whether or not to draw on image"/> -->
 
     <define name="RAY_PATH_FINDER_BROWN_LUM" value="0" description="Brown mean luminance"/>
     <define name="RAY_PATH_FINDER_BROWN_CB" value="0" description="Brown mean blue chroma"/>
     <define name="RAY_PATH_FINDER_BROWN_CR" value="0" description="Brown mean red chroma"/>
     <define name="RAY_PATH_FINDER_BROWN_MARGIN" value="0" description="Brown margin around mean"/>
-    <!-- <define name="RAY_PATH_FINDER_BROWN_DRAW" value="FALSE|TRUE" description="Whether or not to draw on image"/> -->
   </doc>
 
  <settings>
@@ -42,16 +38,19 @@
         <dl_setting var="green.cr" min="0" step="1" max="255" shortname="green_v"/>
         <dl_setting var="green.margin" min="0" step="1" max="255" shortname="green_margin"/>
         <dl_setting var="green.draw" min="0" step="1" max="1" values="False|True" shortname="draw green"/>
+
         <dl_setting var="orange.lum" min="0" step="1" max="255" shortname="orange_y"/>
         <dl_setting var="orange.cb" min="0" step="1" max="255" shortname="orange_u"/>
         <dl_setting var="orange.cr" min="0" step="1" max="255" shortname="orange_v"/>
         <dl_setting var="orange.margin" min="0" step="1" max="255" shortname="orange_margin"/>
         <dl_setting var="orange.draw" min="0" step="1" max="1" values="False|True" shortname="draw orange"/>
+
         <dl_setting var="purple.lum" min="0" step="1" max="255" shortname="purple_y"/>
         <dl_setting var="purple.cb" min="0" step="1" max="255" shortname="purple_u"/>
         <dl_setting var="purple.cr" min="0" step="1" max="255" shortname="purple_v"/>
         <dl_setting var="purple.margin" min="0" step="1" max="255" shortname="purple_margin"/>
         <dl_setting var="purple.draw" min="0" step="1" max="1" values="False|True" shortname="draw purple"/>
+        
         <dl_setting var="brown.lum" min="0" step="1" max="255" shortname="brown_y"/>
         <dl_setting var="brown.cb" min="0" step="1" max="255" shortname="brown_u"/>
         <dl_setting var="brown.cr" min="0" step="1" max="255" shortname="brown_v"/>

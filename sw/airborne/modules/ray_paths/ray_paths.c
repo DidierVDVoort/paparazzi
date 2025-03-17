@@ -12,13 +12,7 @@
 
 static pthread_mutex_t mutex;
 
-#ifndef RAY_PATH_FINDER_FPS1
-#define RAY_PATH_FINDER_FPS1 0 ///< Default FPS (zero means run at camera fps)
-#endif
-
 // Filter Settings
-
-
 ColorSettings green = {0, 0, 0, 0, false};
 ColorSettings orange = {0, 0, 0, 0, false};
 ColorSettings purple = {0, 0, 0, 0, false};
@@ -315,7 +309,7 @@ void draw_best_line(struct image_t *img, float alpha, float entry_point_fraction
 
   // Loop through half of x-values
   for (uint16_t x = 0; x < 101; x++) {
-    uint8_t *yp, *up, *vp;
+    uint8_t *yp;
 
     for (uint16_t offset = 0; offset < 11; offset++) {
       // Compute the y-value using the slope
@@ -325,15 +319,9 @@ void draw_best_line(struct image_t *img, float alpha, float entry_point_fraction
       // Access the U, Y1, and V values directly
       if (x % 2 == 0) {
         // Even x
-        up = &buffer[y * 2 * img->w + 2 * x];      // U
         yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y1
-        vp = &buffer[y * 2 * img->w + 2 * x + 2];  // V
-        //yp = &buffer[y * 2 * img->w + 2 * x + 3]; // Y2
       } else {
         // Uneven x
-        up = &buffer[y * 2 * img->w + 2 * x - 2];  // U
-        //yp = &buffer[y * 2 * img->w + 2 * x - 1]; // Y1
-        vp = &buffer[y * 2 * img->w + 2 * x];      // V
         yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y2
       }
 

@@ -3,17 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-
-// Filter Settings
-extern uint8_t margin_gr_calibration;
-extern uint8_t lum_gr_calibration;
-extern uint8_t cb_gr_calibration;
-extern uint8_t cr_gr_calibration;
-
-extern uint8_t margin_or_calibration;
-extern uint8_t lum_or_calibration;
-extern uint8_t cb_or_calibration;
-extern uint8_t cr_or_calibration;
+#include "modules/ray_paths/ray_paths.h"
 
 extern bool calibration_mode;
 extern bool green_draw_calibration;
