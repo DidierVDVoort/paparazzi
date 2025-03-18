@@ -39,7 +39,7 @@ struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute_
     -0.115f, 0.03846f, 0.1923f, 0.34615f, 0.5f, 0.65385f, 0.8077f, 0.961538f, 1.115f
   };
 
-
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   pthread_mutex_lock(&mutex);
   int16_t costs[9]; //Initialise cost matrix for 9 rays
   int16_t min_cost = INT16_MAX;
@@ -81,11 +81,13 @@ struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute_
 
   if (ratio > 30){
     best_angle_rad_instruction = best_angle_rad;
-  }
-
+  } //only change steering angle if change in cost is larger than 30%
+  float local_best_angle_rad = best_angle_rad;
+  float local_entry_point_fraction = entry_point_fractions[best_index];
   pthread_mutex_unlock(&mutex);
+  ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-  draw_best_line(img, best_angle_rad, entry_point_fractions[best_index]);
+  draw_best_line(img, local_best_angle_rad, local_entry_point_fraction);
   
   fprintf(stderr, "[random_draw1] Min Cost: %d, Best Angle: %.2f degrees\n", min_cost, best_angle_rad_instruction * 180.0f / M_PI);
   
