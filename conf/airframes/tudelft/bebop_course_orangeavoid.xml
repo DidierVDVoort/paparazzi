@@ -9,7 +9,7 @@
     <target name="ap" board="bebop">
       <define name="VIDEO_CAPTURE_PATH" value="/data/ftp/internal_000/images"/>
       <define name="LOGGER_FILE_PATH" value="/data/ftp/internal_000/log"/>
-      <define name="MT9V117_TARGET_FPS" value="1"/>
+      <define name="MT9V117_TARGET_FPS" value="10"/>
       
       <!-- Detect orange -->
       <define name="COLOR_OBJECT_DETECTOR_LUM_MIN1" value="30"/>
@@ -59,7 +59,7 @@
     </module>
     <module name="video_capture">
       <define name="VIDEO_CAPTURE_CAMERA" value="front_camera"/>
-      <define name="VIDEO_CAPTURE_FPS" value="1"/>
+      <define name="VIDEO_CAPTURE_FPS" value="10"/>
     </module>
 <!--
     <module name="cv_detect_color_object">
