@@ -47,6 +47,8 @@
 #endif
 
 uint8_t chooseRandomIncrementAvoidance(void);
+void calculateRayEndpoints(float pixel1, float pixel2, float *x1, float *y1, float *x2, float *y2, float ray_length);
+static int closerToOrigin(float x1, float y1, float x2, float y2, float pixel1, float pixel2, float *direction);
 
 enum navigation_state_t {
   SAFE,
@@ -156,13 +158,62 @@ void updateCurrentPosition(void)
   VERBOSE_PRINT("X pos with converting: %f\n", conv_position_x);
   VERBOSE_PRINT("Y pos with converting: %f\n", conv_position_y);
   VERBOSE_PRINT("Inside obstacle zone: %s\n", InsideObstacleZone(conv_position_x, conv_position_y) ? "true" : "false");
-  
-              
+  uint16_t min_y = 0; // Initialize min_y variable
+  //VERBOSE_PRINT("Min y: %f\n", (float)min_y);
+  //VERBOSE_PRINT("Max y: %f\n", (float)max_y);            
 }
 
 // Automatically update the current position every iteration
 updateCurrentPosition();
 
+
+float x1, y1, x2, y2; // Define variables to hold the ray endpoints
+float pixel1 = y_centre - 10; // Define the first pixel
+float pixel2 = y_centre + 10; // Define the second pixel
+float ray_length = 0.5; // Define the length of the ray
+float direction;
+
+
+void calculateRayEndpoints(float pixel1, float pixel2, float *x1, float *y1, float *x2, float *y2, float ray_length) {
+  // Convert pixel values to angles
+  float angle1 = (fov_angle / im_width) * pixel1;
+  float angle2 = (fov_angle / im_width) * pixel2;
+
+  // Get the drone's absolute position and heading
+  float drone_x = conv_position_x;
+  float drone_y = conv_position_y;
+  float drone_heading = stateGetNedToBodyEulers_f()->psi;
+
+  // Calculate absolute angles for the rays
+  float abs_angle1 = drone_heading + angle1;
+  float abs_angle2 = drone_heading + angle2;
+
+  // Calculate the endpoints of the rays in absolute coordinates
+  *x1 = drone_x + ray_length * cosf(abs_angle1);
+  *y1 = drone_y + ray_length * sinf(abs_angle1);
+  *x2 = drone_x + ray_length * cosf(abs_angle2);
+  *y2 = drone_y + ray_length * sinf(abs_angle2);
+
+  // Output the coordinates for debugging
+  VERBOSE_PRINT("Ray 1 endpoint: (%f, %f)\n", *x1, *y1);
+  VERBOSE_PRINT("Ray 2 endpoint: (%f, %f)\n", *x2, *y2);
+}
+
+int closerToOrigin(float x1, float y1, float x2, float y2, float pixel1, float pixel2, float *direction) {
+  float distance1 = x1 * x1 + y1 * y1;
+  float distance2 = x2 * x2 + y2 * y2;
+
+  if (distance1 <= distance2) {
+    *direction = pixel1;
+    return 0;
+  } else {
+    *direction = pixel2;
+    return 1;
+  }
+}
+
+calculateRayEndpoints(pixel1, pixel2, &x1, &y1, &x2, &y2, ray_length);
+closerToOrigin(x1, y1, x2, y2, pixel1, pixel2, &direction);
   // update our safe confidence using color threshold
   if(color_count < color_count_threshold){
     obstacle_free_confidence++;
@@ -175,8 +226,8 @@ updateCurrentPosition();
 
   float speed_sp = fminf(oag_max_speed, 0.2f * obstacle_free_confidence);
 
-  fprintf(stderr, "Recieved y_direction: %f\n", y_centre);
-  float abs_ang = (fov_angle/im_width)*y_centre;
+  fprintf(stderr, "Chosen y_direction: %f\n", direction);
+  float abs_ang = (fov_angle/im_width)*direction;
   float heading = stateGetNedToBodyEulers_f()->psi + abs_ang;
   fprintf(stderr, "Heading: %f\n", heading);
 
