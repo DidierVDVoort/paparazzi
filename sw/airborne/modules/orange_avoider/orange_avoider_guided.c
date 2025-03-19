@@ -64,7 +64,7 @@ enum navigation_state_t {
 // define settings
 float oag_color_count_frac = 0.30f;       // obstacle detection threshold as a fraction of total of image
 float oag_floor_count_frac = 0.01f;       // floor detection threshold as a fraction of total of image
-float oag_max_speed = 0.5f;               // max flight speed [m/s]
+float oag_max_speed = 0.3f;               // max flight speed [m/s]
 float oag_heading_rate = RadOfDeg(20.f);  // heading change setpoint for avoidance [rad/s]
 float fov_angle = 2.1f;        // field of view angle of the camera [rad]
 float im_width = 208.f;                   // image width in pixels
@@ -223,7 +223,7 @@ void orange_avoider_guided_periodic(void)
     float distance1 = x1 * x1 + y1 * y1;
     float distance2 = x2 * x2 + y2 * y2;
   
-    if (distance1 <= distance2) {
+    if (distance1 > distance2) {
       *direction = pixel1;
       return 0;
     } else {
@@ -291,7 +291,7 @@ void orange_avoider_guided_periodic(void)
 
     case TURN_TO_HEADING:
       fprintf(stderr,"Heading Error: %f\n",fabsf(stateGetNedToBodyEulers_f()->psi - heading));  
-      if (floor_count < floor_count_threshold){
+      if (!InsideObstacleZone(conv_position_x, conv_position_y) && (floor_count < floor_count_threshold || fabsf(floor_centroid_frac) > 0.12)){
         navigation_state = OUT_OF_BOUNDS;
         counter = wait_time;
       } else if (obstacle_free_confidence == 0){
@@ -299,7 +299,7 @@ void orange_avoider_guided_periodic(void)
         counter = wait_time;
       } else if (fabsf(stateGetNedToBodyEulers_f()->psi - heading) < acceptable_heading_th || 2*3.14159f - fabsf(stateGetNedToBodyEulers_f()->psi - heading) < acceptable_heading_th){
         counter = wait_time;
-        guidance_h_set_heading(stateGetNedToBodyEulers_f()->psi);
+        // guidance_h_set_heading(stateGetNedToBodyEulers_f()->psi);
         navigation_state = SAFE;
       } 
     break;
