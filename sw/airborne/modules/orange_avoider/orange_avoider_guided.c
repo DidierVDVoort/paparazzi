@@ -36,6 +36,10 @@
 #include <math.h>
 #include <stdint.h>
 
+
+#define NAV_C // needed to get the nav functions like Inside...
+#include "generated/flight_plan.h"
+
 #define ORANGE_AVOIDER_VERBOSE TRUE
 
 #define PRINT(string,...) fprintf(stderr, "[orange_avoider_guided->%s()] " string,__FUNCTION__ , ##__VA_ARGS__)
@@ -71,6 +75,9 @@ float heading = 0;                        // heading of the drone
 u_int16_t counter = 0;
 float acceptable_heading_th = 0.10f;
 float turning_spd = 0.0f;
+
+void calculateRayEndpoints(float pixel1, float pixel2, float *x1, float *y1, float *x2, float *y2, float ray_length);
+static int closerToOrigin(float x1, float y1, float x2, float y2, float pixel1, float pixel2, float *direction);
 
 // define and initialise global variables
 enum navigation_state_t navigation_state = SEARCH_FOR_SAFE_HEADING;   // current state in state machine
@@ -152,6 +159,88 @@ void orange_avoider_guided_periodic(void)
     obstacle_free_confidence -= 2;  // be more cautious with positive obstacle detections
   }
 
+
+  struct EnuCoor_i current_position;
+  float conv_position_x;
+  float conv_position_y;
+  
+  void updateCurrentPosition(void)
+  {
+    current_position.x = stateGetPositionEnu_i()->x;
+    current_position.y = stateGetPositionEnu_i()->y;
+    //conv_position_x = POS_FLOAT_OF_BFP(current_position.x);
+    //conv_position_y = POS_FLOAT_OF_BFP(current_position.y);
+  
+    //VERBOSE_PRINT("X pos without converting: %f\n", current_position.x);
+    //VERBOSE_PRINT("Y pos without converting: %f\n", current_position.y);        
+    conv_position_x = POS_FLOAT_OF_BFP(current_position.x);
+    conv_position_y = POS_FLOAT_OF_BFP(current_position.y);
+    VERBOSE_PRINT("X pos with converting: %f\n", conv_position_x);
+    VERBOSE_PRINT("Y pos with converting: %f\n", conv_position_y);
+    VERBOSE_PRINT("Inside obstacle zone: %s\n", InsideObstacleZone(conv_position_x, conv_position_y) ? "true" : "false");
+    uint16_t min_y = 0; // Initialize min_y variable
+    //VERBOSE_PRINT("Min y: %f\n", (float)min_y);
+    //VERBOSE_PRINT("Max y: %f\n", (float)max_y);            
+  }
+  
+  // Automatically update the current position every iteration
+  updateCurrentPosition();
+  
+  
+  float x1, y1, x2, y2; // Define variables to hold the ray endpoints
+  float pixel1 = y_centre - 10; // Define the first pixel
+  float pixel2 = y_centre + 10; // Define the second pixel
+  float ray_length = 0.5; // Define the length of the ray
+  float direction;
+  
+  
+  void calculateRayEndpoints(float pixel1, float pixel2, float *x1, float *y1, float *x2, float *y2, float ray_length) {
+    // Convert pixel values to angles
+    float angle1 = (fov_angle / im_width) * pixel1;
+    float angle2 = (fov_angle / im_width) * pixel2;
+  
+    // Get the drone's absolute position and heading
+    float drone_x = conv_position_x;
+    float drone_y = conv_position_y;
+    float drone_heading = stateGetNedToBodyEulers_f()->psi;
+  
+    // Calculate absolute angles for the rays
+    float abs_angle1 = drone_heading + angle1;
+    float abs_angle2 = drone_heading + angle2;
+  
+    // Calculate the endpoints of the rays in absolute coordinates
+    *x1 = drone_x + ray_length * cosf(abs_angle1);
+    *y1 = drone_y + ray_length * sinf(abs_angle1);
+    *x2 = drone_x + ray_length * cosf(abs_angle2);
+    *y2 = drone_y + ray_length * sinf(abs_angle2);
+  
+    // Output the coordinates for debugging
+    VERBOSE_PRINT("Ray 1 endpoint: (%f, %f)\n", *x1, *y1);
+    VERBOSE_PRINT("Ray 2 endpoint: (%f, %f)\n", *x2, *y2);
+  }
+  
+  int closerToOrigin(float x1, float y1, float x2, float y2, float pixel1, float pixel2, float *direction) {
+    float distance1 = x1 * x1 + y1 * y1;
+    float distance2 = x2 * x2 + y2 * y2;
+  
+    if (distance1 <= distance2) {
+      *direction = pixel1;
+      return 0;
+    } else {
+      *direction = pixel2;
+      return 1;
+    }
+  }
+  
+  calculateRayEndpoints(pixel1, pixel2, &x1, &y1, &x2, &y2, ray_length);
+  closerToOrigin(x1, y1, x2, y2, pixel1, pixel2, &direction);
+    // update our safe confidence using color threshold
+    if(color_count < color_count_threshold){
+      obstacle_free_confidence++;
+    } else {
+      obstacle_free_confidence -= 2;  // be more cautious with positive obstacle detections
+    }
+
   // bound obstacle_free_confidence
   Bound(obstacle_free_confidence, 0, max_trajectory_confidence);
 
@@ -162,8 +251,8 @@ void orange_avoider_guided_periodic(void)
 
   switch (navigation_state){
     case SAFE:
-      if (floor_count < floor_count_threshold ){
-        navigation_state = OUT_OF_BOUNDS;
+    if (!InsideObstacleZone(conv_position_x, conv_position_y) && (floor_count < floor_count_threshold || fabsf(floor_centroid_frac) > 0.12)){
+      navigation_state = OUT_OF_BOUNDS;
         counter = wait_time;
       } else if (obstacle_free_confidence == 0){
         navigation_state = OBSTACLE_FOUND;
@@ -180,7 +269,7 @@ void orange_avoider_guided_periodic(void)
     case SET_HEADING:
       // abs_ang = (fov_angle/im_width)*y_centre;
       
-      abs_ang = atan((im_width - 2*y_centre)/im_width)*tan(fov_angle/2);
+      abs_ang = atan((im_width - 2*direction)/im_width)*tan(fov_angle/2);
       heading = stateGetNedToBodyEulers_f()->psi - abs_ang;
 
       if (fabs(heading - stateGetNedToBodyEulers_f()->psi) < 0.08){
