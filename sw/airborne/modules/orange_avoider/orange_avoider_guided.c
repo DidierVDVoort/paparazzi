@@ -34,6 +34,9 @@
 #include <stdio.h>
 #include <time.h>
 
+#define NAV_C // needed to get the nav functions like Inside...
+#include "generated/flight_plan.h"
+
 #define ORANGE_AVOIDER_VERBOSE TRUE
 
 #define PRINT(string,...) fprintf(stderr, "[orange_avoider_guided->%s()] " string,__FUNCTION__ , ##__VA_ARGS__)
@@ -132,6 +135,33 @@ void orange_avoider_guided_periodic(void)
   VERBOSE_PRINT("Color_count: %d  threshold: %d state: %d \n", color_count, color_count_threshold, navigation_state);
   VERBOSE_PRINT("Floor count: %d, threshold: %d\n", floor_count, floor_count_threshold);
   VERBOSE_PRINT("Floor centroid: %f\n", floor_centroid_frac);
+  /*
+  * Updates the current position in a global variable or pointer
+  */
+struct EnuCoor_i current_position;
+float conv_position_x;
+float conv_position_y;
+
+void updateCurrentPosition(void)
+{
+  current_position.x = stateGetPositionEnu_i()->x;
+  current_position.y = stateGetPositionEnu_i()->y;
+  //conv_position_x = POS_FLOAT_OF_BFP(current_position.x);
+  //conv_position_y = POS_FLOAT_OF_BFP(current_position.y);
+
+  //VERBOSE_PRINT("X pos without converting: %f\n", current_position.x);
+  //VERBOSE_PRINT("Y pos without converting: %f\n", current_position.y);        
+  conv_position_x = POS_FLOAT_OF_BFP(current_position.x);
+  conv_position_y = POS_FLOAT_OF_BFP(current_position.y);
+  VERBOSE_PRINT("X pos with converting: %f\n", conv_position_x);
+  VERBOSE_PRINT("Y pos with converting: %f\n", conv_position_y);
+  VERBOSE_PRINT("Inside obstacle zone: %s\n", InsideObstacleZone(conv_position_x, conv_position_y) ? "true" : "false");
+  
+              
+}
+
+// Automatically update the current position every iteration
+updateCurrentPosition();
 
   // update our safe confidence using color threshold
   if(color_count < color_count_threshold){
@@ -150,9 +180,11 @@ void orange_avoider_guided_periodic(void)
   float heading = stateGetNedToBodyEulers_f()->psi + abs_ang;
   fprintf(stderr, "Heading: %f\n", heading);
 
+
   switch (navigation_state){
     case SAFE:
-      if (floor_count < floor_count_threshold || fabsf(floor_centroid_frac) > 0.12){
+      //if (floor_count < floor_count_threshold || fabsf(floor_centroid_frac) > 0.12){
+      if (!InsideObstacleZone(conv_position_x, conv_position_y) && (floor_count < floor_count_threshold || fabsf(floor_centroid_frac) > 0.12)){
         navigation_state = OUT_OF_BOUNDS;
       } else if (obstacle_free_confidence == 0){
         navigation_state = OBSTACLE_FOUND;
