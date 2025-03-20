@@ -155,10 +155,18 @@ void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_ma
         min_bearing = 0;
     }
 
+    if (min_bearing > 1) {
+        min_bearing = 1;
+    }
+
     if (max_bearing < 0) {
         max_bearing = 0;
     }
 
+    // Ensure min_bearing is non-negative
+    if (max_bearing > 1) {
+        max_bearing = 1;
+    }
 
     // Convert normalized bearings to pixel locations
     uint8_t min_y = (uint8_t)(min_bearing * img->h);
