@@ -14,7 +14,8 @@
 #define ORANGE_AVOIDER_H
 
 // settings
-extern float oa_color_count_frac;
+#include <stdint.h>
+extern uint8_t turn_around_wait_time;
 
 // functions
 extern void orange_avoider_init(void);

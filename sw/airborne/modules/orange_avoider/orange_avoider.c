@@ -45,21 +45,23 @@ static uint8_t chooseRandomIncrementAvoidance(void);
 
 enum navigation_state_t {
   SAFE,
+  TURN,
   RIGHT,
   LEFT,
   OUT_OF_BOUNDS
   };
 
 // define settings
-float oa_color_count_frac = 0.18f;
+uint8_t turn_around_wait_time = 4u;       // time to wait before turning around [s]
 
 // define and initialise global variables
 enum navigation_state_t navigation_state = SAFE;
 int32_t color_count = 0;                // orange color count from color filter for obstacle detection
 int32_t heading_setpoint = 0;
-int16_t obstacle_free_confidence = 0;   // a measure of how certain we are that the way ahead is safe.
+int16_t turn_around = 0;
 float heading_increment = 5.f;          // heading angle increment [deg]
 float maxDistance = 2.25;               // max waypoint displacement [m]
+static time_t turn_start_time = 0;
 
 const int16_t max_trajectory_confidence = 5; // number of consecutive negative object detections to be sure we are obstacle free
 
@@ -75,11 +77,12 @@ const int16_t max_trajectory_confidence = 5; // number of consecutive negative o
 #endif
 static abi_event color_detection_ev;
 static void color_detection_cb(uint8_t __attribute__((unused)) sender_id,
-                               int16_t __attribute__((unused)) pixel_x, int16_t __attribute__((unused)) pixel_y,
+                               int16_t mighty_mike, int16_t __attribute__((unused)) pixel_y,
                                int16_t __attribute__((unused)) pixel_width, int16_t __attribute__((unused)) pixel_height,
-                               int32_t __attribute__((unused)) best_heading_angle, int16_t __attribute__((unused)) extra)
+                               int32_t best_heading_angle, int16_t __attribute__((unused)) extra)
 {
   heading_setpoint = best_heading_angle;
+  turn_around = mighty_mike;
 }
 
 /*
@@ -110,6 +113,8 @@ void orange_avoider_periodic(void)
 
   // fprintf(stderr, "NAV_STATE: %d, Best Angle: %d degrees\n", navigation_state, heading_setpoint);
   fprintf(stderr, "Heading setpoint: %d\n", heading_setpoint);
+  fprintf(stderr, "Mighty Mike: %d\n", turn_around);
+  fprintf(stderr, "Time: %ld\n", (long int)time(NULL));
 
   switch (navigation_state){
     case SAFE:
@@ -117,6 +122,9 @@ void orange_avoider_periodic(void)
       moveWaypointForward(WP_TRAJECTORY, 1.5f * moveDistance);
       if (!InsideFlightZone(WaypointX(WP_TRAJECTORY),WaypointY(WP_TRAJECTORY))){
         navigation_state = OUT_OF_BOUNDS;
+      } else if (turn_around){
+        navigation_state = TURN;
+        fprintf(stderr, "TURNAROUND\n");
       } else if (heading_setpoint > 0){
         fprintf(stderr, "RIGHT: Heading setpoint: %d\n", heading_setpoint);
         navigation_state = RIGHT;
@@ -129,6 +137,24 @@ void orange_avoider_periodic(void)
       }
 
       break;
+    case TURN: {
+      fprintf(stderr, "Time2: %ld\n", (long int)(time(NULL) - turn_start_time));
+      if (turn_start_time == 0) {
+      waypoint_move_here_2d(WP_GOAL);
+      waypoint_move_here_2d(WP_RETREAT);
+      waypoint_move_here_2d(WP_TRAJECTORY);
+      increase_nav_heading(180.f);
+      turn_start_time = time(NULL); // Record the start time
+      }
+
+      // Check if 2 seconds have passed
+      if (time(NULL) - turn_start_time >= turn_around_wait_time) {
+      fprintf(stderr, "TURNAROUND COMPLETE\n");
+      navigation_state = SAFE;
+      turn_start_time = 0; // Reset the timer
+      }
+      break;
+    }
     case RIGHT:
       increase_nav_heading(heading_setpoint);
       if (heading_setpoint == 0){
@@ -149,9 +175,6 @@ void orange_avoider_periodic(void)
       if (InsideFlightZone(WaypointX(WP_TRAJECTORY),WaypointY(WP_TRAJECTORY))){
         // add offset to head back into arena
         increase_nav_heading(heading_increment);
-
-        // reset safe counter
-        obstacle_free_confidence = 0;
 
         // ensure direction is safe before continuing
         navigation_state = RIGHT;
