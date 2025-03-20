@@ -52,7 +52,7 @@ enum navigation_state_t {
   };
 
 // define settings
-float oa_color_count_frac = 0.18f;
+uint8_t turn_around_wait_time = 4u;       // time to wait before turning around [s]
 
 // define and initialise global variables
 enum navigation_state_t navigation_state = SAFE;
@@ -61,6 +61,7 @@ int32_t heading_setpoint = 0;
 int16_t turn_around = 0;
 float heading_increment = 5.f;          // heading angle increment [deg]
 float maxDistance = 2.25;               // max waypoint displacement [m]
+static time_t turn_start_time = 0;
 
 const int16_t max_trajectory_confidence = 5; // number of consecutive negative object detections to be sure we are obstacle free
 
@@ -112,6 +113,8 @@ void orange_avoider_periodic(void)
 
   // fprintf(stderr, "NAV_STATE: %d, Best Angle: %d degrees\n", navigation_state, heading_setpoint);
   fprintf(stderr, "Heading setpoint: %d\n", heading_setpoint);
+  fprintf(stderr, "Mighty Mike: %d\n", turn_around);
+  fprintf(stderr, "Time: %ld\n", (long int)time(NULL));
 
   switch (navigation_state){
     case SAFE:
@@ -135,8 +138,7 @@ void orange_avoider_periodic(void)
 
       break;
     case TURN: {
-      static time_t turn_start_time = 0;
-
+      fprintf(stderr, "Time2: %ld\n", (long int)(time(NULL) - turn_start_time));
       if (turn_start_time == 0) {
       waypoint_move_here_2d(WP_GOAL);
       waypoint_move_here_2d(WP_RETREAT);
@@ -146,7 +148,8 @@ void orange_avoider_periodic(void)
       }
 
       // Check if 2 seconds have passed
-      if (difftime(time(NULL), turn_start_time) >= 2) {
+      if (time(NULL) - turn_start_time >= turn_around_wait_time) {
+      fprintf(stderr, "TURNAROUND COMPLETE\n");
       navigation_state = SAFE;
       turn_start_time = 0; // Reset the timer
       }

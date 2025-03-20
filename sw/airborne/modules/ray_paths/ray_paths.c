@@ -23,7 +23,7 @@ float best_angle_rad = 0;
 float best_angle_rad_instruction = 0;
 int16_t turning_action = 0;
 uint8_t best_index = 0;
-uint16_t turning_threshold = -15;
+int16_t turning_threshold = -15;
 
 // Define cost function
 int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction, float best_angle_rad);
