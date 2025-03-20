@@ -49,7 +49,7 @@ enum navigation_state_t {
   RIGHT,
   LEFT,
   OUT_OF_BOUNDS
-  };
+};
 
 // define settings
 uint8_t turn_around_wait_time = 4u;       // time to wait before turning around [s]
@@ -61,7 +61,9 @@ int32_t heading_setpoint = 0;
 int16_t turn_around = 0;
 float heading_increment = 5.f;          // heading angle increment [deg]
 float maxDistance = 2.25;               // max waypoint displacement [m]
-static time_t turn_start_time = 0;
+static bool waypoints_set = false;
+static bool out_of_bounds_handled = false;
+float turning_setpoint = 5.f;
 
 const int16_t max_trajectory_confidence = 5; // number of consecutive negative object detections to be sure we are obstacle free
 
@@ -114,7 +116,6 @@ void orange_avoider_periodic(void)
   // fprintf(stderr, "NAV_STATE: %d, Best Angle: %d degrees\n", navigation_state, heading_setpoint);
   fprintf(stderr, "Heading setpoint: %d\n", heading_setpoint);
   fprintf(stderr, "Mighty Mike: %d\n", turn_around);
-  fprintf(stderr, "Time: %ld\n", (long int)time(NULL));
 
   switch (navigation_state){
     case SAFE:
@@ -138,20 +139,19 @@ void orange_avoider_periodic(void)
 
       break;
     case TURN: {
-      fprintf(stderr, "Time2: %ld\n", (long int)(time(NULL) - turn_start_time));
-      if (turn_start_time == 0) {
-      waypoint_move_here_2d(WP_GOAL);
-      waypoint_move_here_2d(WP_RETREAT);
-      waypoint_move_here_2d(WP_TRAJECTORY);
-      increase_nav_heading(180.f);
-      turn_start_time = time(NULL); // Record the start time
+      if (!waypoints_set) {
+        waypoint_move_here_2d(WP_GOAL);
+        waypoint_move_here_2d(WP_RETREAT);
+        waypoint_move_here_2d(WP_TRAJECTORY);
+        waypoints_set = true;
       }
+      increase_nav_heading(turning_setpoint);
 
       // Check if 2 seconds have passed
-      if (time(NULL) - turn_start_time >= turn_around_wait_time) {
+      if (turn_around == 0) {
       fprintf(stderr, "TURNAROUND COMPLETE\n");
+      waypoints_set = false; // reset parameter
       navigation_state = SAFE;
-      turn_start_time = 0; // Reset the timer
       }
       break;
     }
@@ -168,16 +168,69 @@ void orange_avoider_periodic(void)
       }
       break;
     case OUT_OF_BOUNDS:
-      increase_nav_heading(heading_increment);
+      if (!out_of_bounds_handled) {
+        // float dydx_drone = (WaypointY(WP_TRAJECTORY) - WaypointY(WP_GOAL)) / (WaypointX(WP_TRAJECTORY) - WaypointX(WP_GOAL));
+        // float dydx_edge = 0.f;
+        // (x - x1) * (y2 - y1) - (y - y1) * (x2 - x1)
+        // edge one
+        if ((WaypointX(WP_TRAJECTORY) - WaypointX(WP_FZ1)) * (WaypointY(WP_FZ2) - WaypointY(WP_FZ1)) - (WaypointY(WP_TRAJECTORY) - WaypointY(WP_FZ1)) * (WaypointX(WP_FZ2) - WaypointX(WP_FZ1)) <= 0) {
+          fprintf(stderr, "EDGE ONE\n");
+          float distance_traj_wp1 = sqrtf(powf(WaypointX(WP_TRAJECTORY) - WaypointX(WP_FZ1), 2) + powf(WaypointY(WP_TRAJECTORY) - WaypointY(WP_FZ1), 2));
+          float distance_goal_wp1 = sqrtf(powf(WaypointX(WP_GOAL) - WaypointX(WP_FZ1), 2) + powf(WaypointY(WP_GOAL) - WaypointY(WP_FZ1), 2));
+          if (distance_goal_wp1 < distance_traj_wp1) {
+          turning_setpoint = 5.f;
+          } else {
+          turning_setpoint = -5.f;
+          }
+        }
+
+        // edge two
+        if ((WaypointX(WP_TRAJECTORY) - WaypointX(WP_FZ2)) * (WaypointY(WP_FZ3) - WaypointY(WP_FZ2)) - (WaypointY(WP_TRAJECTORY) - WaypointY(WP_FZ2)) * (WaypointX(WP_FZ3) - WaypointX(WP_FZ2)) <= 0) {
+          fprintf(stderr, "EDGE TWO\n");
+          float distance_traj_wp2 = sqrtf(powf(WaypointX(WP_TRAJECTORY) - WaypointX(WP_FZ2), 2) + powf(WaypointY(WP_TRAJECTORY) - WaypointY(WP_FZ2), 2));
+          float distance_goal_wp2 = sqrtf(powf(WaypointX(WP_GOAL) - WaypointX(WP_FZ2), 2) + powf(WaypointY(WP_GOAL) - WaypointY(WP_FZ2), 2));
+          if (distance_goal_wp2 < distance_traj_wp2) {
+          turning_setpoint = 5.f;
+          } else {
+          turning_setpoint = -5.f;
+          }
+        }
+        // edge three
+        if ((WaypointX(WP_TRAJECTORY) - WaypointX(WP_FZ3)) * (WaypointY(WP_FZ4) - WaypointY(WP_FZ3)) - (WaypointY(WP_TRAJECTORY) - WaypointY(WP_FZ3)) * (WaypointX(WP_FZ4) - WaypointX(WP_FZ3)) <= 0) {
+          fprintf(stderr, "EDGE THREE\n");
+          float distance_traj_wp3 = sqrtf(powf(WaypointX(WP_TRAJECTORY) - WaypointX(WP_FZ3), 2) + powf(WaypointY(WP_TRAJECTORY) - WaypointY(WP_FZ3), 2));
+          float distance_goal_wp3 = sqrtf(powf(WaypointX(WP_GOAL) - WaypointX(WP_FZ3), 2) + powf(WaypointY(WP_GOAL) - WaypointY(WP_FZ3), 2));
+          if (distance_goal_wp3 < distance_traj_wp3) {
+          turning_setpoint = 5.f;
+          } else {
+          turning_setpoint = -5.f;
+          }
+        }
+        // edge four
+        if ((WaypointX(WP_TRAJECTORY) - WaypointX(WP_FZ4)) * (WaypointY(WP_FZ1) - WaypointY(WP_FZ4)) - (WaypointY(WP_TRAJECTORY) - WaypointY(WP_FZ4)) * (WaypointX(WP_FZ1) - WaypointX(WP_FZ4)) <= 0) {
+          fprintf(stderr, "EDGE FOUR\n");
+          float distance_traj_wp4 = sqrtf(powf(WaypointX(WP_TRAJECTORY) - WaypointX(WP_FZ4), 2) + powf(WaypointY(WP_TRAJECTORY) - WaypointY(WP_FZ4), 2));
+          float distance_goal_wp4 = sqrtf(powf(WaypointX(WP_GOAL) - WaypointX(WP_FZ4), 2) + powf(WaypointY(WP_GOAL) - WaypointY(WP_FZ4), 2));
+          if (distance_goal_wp4 < distance_traj_wp4) {
+          turning_setpoint = 5.f;
+          } else {
+          turning_setpoint = -5.f;
+          }
+        }
+        out_of_bounds_handled = true;
+      }
+
+      increase_nav_heading(turning_setpoint);
       moveWaypointForward(WP_TRAJECTORY, 1.5f);
       moveWaypointForward(WP_RETREAT, -1.0f);
 
       if (InsideFlightZone(WaypointX(WP_TRAJECTORY),WaypointY(WP_TRAJECTORY))){
         // add offset to head back into arena
-        increase_nav_heading(heading_increment);
+        increase_nav_heading(turning_setpoint);
+        out_of_bounds_handled = false; // reset parameter
 
         // ensure direction is safe before continuing
-        navigation_state = RIGHT;
+        navigation_state = SAFE;
       }
       break;
     default:
