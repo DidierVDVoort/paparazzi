@@ -25,285 +25,367 @@
  * define which filter to use.
  */
 
-#include "modules/orange_avoider/orange_avoider_guided.h"
-#include "firmwares/rotorcraft/guidance/guidance_h.h"
-#include "modules/safest_bearing/safest_bearing.h"
-#include "generated/airframe.h"
-#include "state.h"
-#include "modules/core/abi.h"
-#include <stdio.h>
-#include <time.h>
-
-#define NAV_C // needed to get the nav functions like Inside...
-#include "generated/flight_plan.h"
-
-#define ORANGE_AVOIDER_VERBOSE TRUE
-
-#define PRINT(string,...) fprintf(stderr, "[orange_avoider_guided->%s()] " string,__FUNCTION__ , ##__VA_ARGS__)
-#if ORANGE_AVOIDER_VERBOSE
-#define VERBOSE_PRINT PRINT
-#else
-#define VERBOSE_PRINT(...)
-#endif
-
-uint8_t chooseRandomIncrementAvoidance(void);
-void calculateRayEndpoints(float pixel1, float pixel2, float *x1, float *y1, float *x2, float *y2, float ray_length);
-static int closerToOrigin(float x1, float y1, float x2, float y2, float pixel1, float pixel2, float *direction);
-
-enum navigation_state_t {
-  SAFE,
-  OBSTACLE_FOUND,
-  SEARCH_FOR_SAFE_HEADING,
-  OUT_OF_BOUNDS,
-  REENTER_ARENA
-};
-
-// define settings
-float oag_color_count_frac = 0.18f;       // obstacle detection threshold as a fraction of total of image
-float oag_floor_count_frac = 0.05f;       // floor detection threshold as a fraction of total of image
-float oag_max_speed = 0.5f;               // max flight speed [m/s]
-float oag_heading_rate = RadOfDeg(20.f);  // heading change setpoint for avoidance [rad/s]
-float fov_angle = RadOfDeg(120.f);         // field of view angle of the camera [rad]
-float im_width = 208.f;
-// define and initialise global variables
-enum navigation_state_t navigation_state = SEARCH_FOR_SAFE_HEADING;   // current state in state machine
-int32_t color_count = 0;                // orange color count from color filter for obstacle detection
-int32_t floor_count = 0;                // green color count from color filter for floor detection
-int32_t floor_centroid = 0;             // floor detector centroid in y direction (along the horizon)
-float avoidance_heading_direction = 0;  // heading change direction for avoidance [rad/s]
-int16_t obstacle_free_confidence = 0;   // a measure of how certain we are that the way ahead if safe.
-
-const int16_t max_trajectory_confidence = 5;  // number of consecutive negative object detections to be sure we are obstacle free
-
-// This call back will be used to receive the color count from the orange detector
-#ifndef ORANGE_AVOIDER_VISUAL_DETECTION_ID
-#error This module requires two color filters, as such you have to define ORANGE_AVOIDER_VISUAL_DETECTION_ID to the orange filter
-#error Please define ORANGE_AVOIDER_VISUAL_DETECTION_ID to be COLOR_OBJECT_DETECTION1_ID or COLOR_OBJECT_DETECTION2_ID in your airframe
-#endif
-static abi_event color_detection_ev;
-static void color_detection_cb(uint8_t __attribute__((unused)) sender_id,
-                               int16_t __attribute__((unused)) pixel_x, int16_t __attribute__((unused)) pixel_y,
-                               int16_t __attribute__((unused)) pixel_width, int16_t __attribute__((unused)) pixel_height,
-                               int32_t quality, int16_t __attribute__((unused)) extra)
-{
-  color_count = quality;
-}
-
-#ifndef FLOOR_VISUAL_DETECTION_ID
-#error This module requires two color filters, as such you have to define FLOOR_VISUAL_DETECTION_ID to the orange filter
-#error Please define FLOOR_VISUAL_DETECTION_ID to be COLOR_OBJECT_DETECTION1_ID or COLOR_OBJECT_DETECTION2_ID in your airframe
-#endif
-static abi_event floor_detection_ev;
-static void floor_detection_cb(uint8_t __attribute__((unused)) sender_id,
-                               int16_t __attribute__((unused)) pixel_x, int16_t pixel_y,
-                               int16_t __attribute__((unused)) pixel_width, int16_t __attribute__((unused)) pixel_height,
-                               int32_t quality, int16_t __attribute__((unused)) extra)
-{
-  floor_count = quality;
-  floor_centroid = pixel_y;
-}
-
-/*
- * Initialisation function
- */
-void orange_avoider_guided_init(void)
-{
-  // Initialise random values
-  srand(time(NULL));
-  chooseRandomIncrementAvoidance();
-
-  // bind our colorfilter callbacks to receive the color filter outputs
-  AbiBindMsgVISUAL_DETECTION(ORANGE_AVOIDER_VISUAL_DETECTION_ID, &color_detection_ev, color_detection_cb);
-  AbiBindMsgVISUAL_DETECTION(FLOOR_VISUAL_DETECTION_ID, &floor_detection_ev, floor_detection_cb);
-}
-
-/*
- * Function that checks it is safe to move forwards, and then sets a forward velocity setpoint or changes the heading
- */
-void orange_avoider_guided_periodic(void)
-{
-  // Only run the mudule if we are in the correct flight mode
-  if (guidance_h.mode != GUIDANCE_H_MODE_GUIDED) {
-    navigation_state = SEARCH_FOR_SAFE_HEADING;
-    obstacle_free_confidence = 0;
-    return;
-  }
-
-  // compute current color thresholds
-  int32_t color_count_threshold = oag_color_count_frac * front_camera.output_size.w * front_camera.output_size.h;
-  int32_t floor_count_threshold = oag_floor_count_frac * front_camera.output_size.w * front_camera.output_size.h;
-  float floor_centroid_frac = floor_centroid / (float)front_camera.output_size.h / 2.f;
-
-  VERBOSE_PRINT("Color_count: %d  threshold: %d state: %d \n", color_count, color_count_threshold, navigation_state);
-  VERBOSE_PRINT("Floor count: %d, threshold: %d\n", floor_count, floor_count_threshold);
-  VERBOSE_PRINT("Floor centroid: %f\n", floor_centroid_frac);
-  /*
-  * Updates the current position in a global variable or pointer
+ #include "modules/orange_avoider/orange_avoider_guided.h"
+ #include "firmwares/rotorcraft/guidance/guidance_h.h"
+ #include "modules/safest_bearing/safest_bearing.h"
+ #include "generated/airframe.h"
+ #include "state.h"
+ #include "modules/core/abi.h"
+ #include <stdio.h>
+ #include <time.h>
+ #include <math.h>
+ #include <stdint.h>
+ 
+ 
+ #define NAV_C // needed to get the nav functions like Inside...
+ #include "generated/flight_plan.h"
+ 
+ #define ORANGE_AVOIDER_VERBOSE TRUE
+ 
+ #define PRINT(string,...) fprintf(stderr, "[orange_avoider_guided->%s()] " string,__FUNCTION__ , ##__VA_ARGS__)
+ #if ORANGE_AVOIDER_VERBOSE
+ #define VERBOSE_PRINT PRINT
+ #else
+ #define VERBOSE_PRINT(...)
+ #endif
+ 
+ uint8_t chooseRandomIncrementAvoidance(void);
+ 
+ enum navigation_state_t {
+   SAFE,
+   OBSTACLE_FOUND,
+   SEARCH_FOR_SAFE_HEADING,
+   OUT_OF_BOUNDS,
+   REENTER_ARENA,
+   SET_HEADING,
+   TURN_TO_HEADING,
+   WAIT_FOR_CONFIRMATION
+ };
+ 
+ // define settings
+ float oag_color_count_frac = 0.30f;       // obstacle detection threshold as a fraction of total of image
+ float oag_floor_count_frac = 0.01f;       // floor detection threshold as a fraction of total of image
+ float oag_max_speed = 0.3f;               // max flight speed [m/s]
+ float oag_heading_rate = RadOfDeg(20.f);  // heading change setpoint for avoidance [rad/s]
+ float fov_angle = 2.1f;        // field of view angle of the camera [rad]
+ float im_width = 208.f;                   // image width in pixels
+ float im_height = 96.0f;                  // image height in pixels
+ int16_t wait_time = 15;                    // time to wait before changing heading [s]
+ float abs_ang = 0;                        // absolute angle of the floor centroid
+ float heading = 0;                        // heading of the drone
+ u_int16_t counter = 0;
+ float acceptable_heading_th = 0.10f;
+ float turning_spd = 0.0f;
+ 
+ void calculateRayEndpoints(float pixel1, float pixel2, float *x1, float *y1, float *x2, float *y2, float ray_length);
+ static int closerToOrigin(float x1, float y1, float x2, float y2, float pixel1, float pixel2, float *direction);
+ 
+ // define and initialise global variables
+ enum navigation_state_t navigation_state = SEARCH_FOR_SAFE_HEADING;   // current state in state machine
+ int32_t color_count = 0;                // orange color count from color filter for obstacle detection
+ int32_t floor_count = 0;                // green color count from color filter for floor detection
+ int32_t floor_centroid = 0;             // floor detector centroid in y direction (along the horizon)
+ float avoidance_heading_direction = 0;  // heading change direction for avoidance [rad/s]
+ int16_t obstacle_free_confidence = 0;   // a measure of how certain we are that the way ahead if safe.
+ 
+ const int16_t max_trajectory_confidence = 3;  // number of consecutive negative object detections to be sure we are obstacle free
+ 
+ // This call back will be used to receive the color count from the orange detector
+ #ifndef ORANGE_AVOIDER_VISUAL_DETECTION_ID
+ #error This module requires two color filters, as such you have to define ORANGE_AVOIDER_VISUAL_DETECTION_ID to the orange filter
+ #error Please define ORANGE_AVOIDER_VISUAL_DETECTION_ID to be COLOR_OBJECT_DETECTION1_ID or COLOR_OBJECT_DETECTION2_ID in your airframe
+ #endif
+ static abi_event color_detection_ev;
+ static void color_detection_cb(uint8_t __attribute__((unused)) sender_id,
+                                int16_t __attribute__((unused)) pixel_x, int16_t __attribute__((unused)) pixel_y,
+                                int16_t __attribute__((unused)) pixel_width, int16_t __attribute__((unused)) pixel_height,
+                                int32_t quality, int16_t __attribute__((unused)) extra)
+ {
+   color_count = quality;
+ }
+ 
+ #ifndef FLOOR_VISUAL_DETECTION_ID
+ #error This module requires two color filters, as such you have to define FLOOR_VISUAL_DETECTION_ID to the orange filter
+ #error Please define FLOOR_VISUAL_DETECTION_ID to be COLOR_OBJECT_DETECTION1_ID or COLOR_OBJECT_DETECTION2_ID in your airframe
+ #endif
+ static abi_event floor_detection_ev;
+ static void floor_detection_cb(uint8_t __attribute__((unused)) sender_id,
+                                int16_t __attribute__((unused)) pixel_x, int16_t pixel_y,
+                                int16_t __attribute__((unused)) pixel_width, int16_t __attribute__((unused)) pixel_height,
+                                int32_t quality, int16_t __attribute__((unused)) extra)
+ {
+   floor_count = quality;
+   floor_centroid = pixel_y;
+ }
+ 
+ /*
+  * Initialisation function
   */
-struct EnuCoor_i current_position;
-float conv_position_x;
-float conv_position_y;
-
-void updateCurrentPosition(void)
-{
-  current_position.x = stateGetPositionEnu_i()->x;
-  current_position.y = stateGetPositionEnu_i()->y;
-  //conv_position_x = POS_FLOAT_OF_BFP(current_position.x);
-  //conv_position_y = POS_FLOAT_OF_BFP(current_position.y);
-
-  //VERBOSE_PRINT("X pos without converting: %f\n", current_position.x);
-  //VERBOSE_PRINT("Y pos without converting: %f\n", current_position.y);        
-  conv_position_x = POS_FLOAT_OF_BFP(current_position.x);
-  conv_position_y = POS_FLOAT_OF_BFP(current_position.y);
-  VERBOSE_PRINT("X pos with converting: %f\n", conv_position_x);
-  VERBOSE_PRINT("Y pos with converting: %f\n", conv_position_y);
-  VERBOSE_PRINT("Inside obstacle zone: %s\n", InsideObstacleZone(conv_position_x, conv_position_y) ? "true" : "false");
-  uint16_t min_y = 0; // Initialize min_y variable
-  //VERBOSE_PRINT("Min y: %f\n", (float)min_y);
-  //VERBOSE_PRINT("Max y: %f\n", (float)max_y);            
-}
-
-// Automatically update the current position every iteration
-updateCurrentPosition();
-
-
-float x1, y1, x2, y2; // Define variables to hold the ray endpoints
-float pixel1 = y_centre - 10; // Define the first pixel
-float pixel2 = y_centre + 10; // Define the second pixel
-float ray_length = 0.5; // Define the length of the ray
-float direction;
-
-
-void calculateRayEndpoints(float pixel1, float pixel2, float *x1, float *y1, float *x2, float *y2, float ray_length) {
-  // Convert pixel values to angles
-  float angle1 = (fov_angle / im_width) * pixel1;
-  float angle2 = (fov_angle / im_width) * pixel2;
-
-  // Get the drone's absolute position and heading
-  float drone_x = conv_position_x;
-  float drone_y = conv_position_y;
-  float drone_heading = stateGetNedToBodyEulers_f()->psi;
-
-  // Calculate absolute angles for the rays
-  float abs_angle1 = drone_heading + angle1;
-  float abs_angle2 = drone_heading + angle2;
-
-  // Calculate the endpoints of the rays in absolute coordinates
-  *x1 = drone_x + ray_length * cosf(abs_angle1);
-  *y1 = drone_y + ray_length * sinf(abs_angle1);
-  *x2 = drone_x + ray_length * cosf(abs_angle2);
-  *y2 = drone_y + ray_length * sinf(abs_angle2);
-
-  // Output the coordinates for debugging
-  VERBOSE_PRINT("Ray 1 endpoint: (%f, %f)\n", *x1, *y1);
-  VERBOSE_PRINT("Ray 2 endpoint: (%f, %f)\n", *x2, *y2);
-}
-
-int closerToOrigin(float x1, float y1, float x2, float y2, float pixel1, float pixel2, float *direction) {
-  float distance1 = x1 * x1 + y1 * y1;
-  float distance2 = x2 * x2 + y2 * y2;
-
-  if (distance1 <= distance2) {
-    *direction = pixel1;
-    return 0;
-  } else {
-    *direction = pixel2;
-    return 1;
-  }
-}
-
-calculateRayEndpoints(pixel1, pixel2, &x1, &y1, &x2, &y2, ray_length);
-closerToOrigin(x1, y1, x2, y2, pixel1, pixel2, &direction);
-  // update our safe confidence using color threshold
-  if(color_count < color_count_threshold){
-    obstacle_free_confidence++;
-  } else {
-    obstacle_free_confidence -= 2;  // be more cautious with positive obstacle detections
-  }
-
-  // bound obstacle_free_confidence
-  Bound(obstacle_free_confidence, 0, max_trajectory_confidence);
-
-  float speed_sp = fminf(oag_max_speed, 0.2f * obstacle_free_confidence);
-
-  fprintf(stderr, "Chosen y_direction: %f\n", direction);
-  float abs_ang = (fov_angle/im_width)*direction;
-  float heading = stateGetNedToBodyEulers_f()->psi + abs_ang;
-  fprintf(stderr, "Heading: %f\n", heading);
-
-
-  switch (navigation_state){
-    case SAFE:
-      //if (floor_count < floor_count_threshold || fabsf(floor_centroid_frac) > 0.12){
-      if (!InsideObstacleZone(conv_position_x, conv_position_y) && (floor_count < floor_count_threshold || fabsf(floor_centroid_frac) > 0.12)){
-        navigation_state = OUT_OF_BOUNDS;
-      } else if (obstacle_free_confidence == 0){
-        navigation_state = OBSTACLE_FOUND;
-      } else {
-        guidance_h_set_body_vel(speed_sp, 0);
-      }
-
-      break;
-    case OBSTACLE_FOUND:
-      // stop
-      guidance_h_set_body_vel(0, 0);
-
-      // randomly select new search direction
-      chooseRandomIncrementAvoidance();
-
-      navigation_state = SEARCH_FOR_SAFE_HEADING;
-
-      break;
-    case SEARCH_FOR_SAFE_HEADING:
-      guidance_h_set_heading_rate(avoidance_heading_direction * oag_heading_rate);
-
-      // make sure we have a couple of good readings before declaring the way safe
-      if (obstacle_free_confidence >= 2){
-        guidance_h_set_heading(stateGetNedToBodyEulers_f()->psi);
-        navigation_state = SAFE;
-      }
-      break;
-    case OUT_OF_BOUNDS:
-      // stop
-      guidance_h_set_body_vel(0, 0);
-
-      // start turn back into arena
-      guidance_h_set_heading_rate(avoidance_heading_direction * RadOfDeg(15));
-
-      navigation_state = REENTER_ARENA;
-
-      break;
-    case REENTER_ARENA:
-      // force floor center to opposite side of turn to head back into arena
-      if (floor_count >= floor_count_threshold && avoidance_heading_direction * floor_centroid_frac >= 0.f){
-        // return to heading mode
-        guidance_h_set_heading(stateGetNedToBodyEulers_f()->psi);
-
-        // reset safe counter
-        obstacle_free_confidence = 0;
-
-        // ensure direction is safe before continuing
-        navigation_state = SAFE;
-      }
-      break;
-    default:
-      break;
-  }
-  return;
-}
-
-/*
- * Sets the variable 'incrementForAvoidance' randomly positive/negative
- */
-uint8_t chooseRandomIncrementAvoidance(void)
-{
-  // Randomly choose CW or CCW avoiding direction
-  if (rand() % 2 == 0) {
-    avoidance_heading_direction = 1.f;
-    VERBOSE_PRINT("Set avoidance increment to: %f\n", avoidance_heading_direction * oag_heading_rate);
-  } else {
-    avoidance_heading_direction = -1.f;
-    VERBOSE_PRINT("Set avoidance increment to: %f\n", avoidance_heading_direction * oag_heading_rate);
-  }
-  return false;
-}
+ void orange_avoider_guided_init(void)
+ {
+   // Initialise random values
+   srand(time(NULL));
+   chooseRandomIncrementAvoidance();
+ 
+   // bind our colorfilter callbacks to receive the color filter outputs
+   AbiBindMsgVISUAL_DETECTION(ORANGE_AVOIDER_VISUAL_DETECTION_ID, &color_detection_ev, color_detection_cb);
+   AbiBindMsgVISUAL_DETECTION(FLOOR_VISUAL_DETECTION_ID, &floor_detection_ev, floor_detection_cb);
+ }
+ 
+ /*
+  * Function that checks it is safe to move forwards, and then sets a forward velocity setpoint or changes the heading
+  */
+ void orange_avoider_guided_periodic(void)
+ {
+   // Only run the mudule if we are in the correct flight mode
+   if (guidance_h.mode != GUIDANCE_H_MODE_GUIDED) {
+     navigation_state = SEARCH_FOR_SAFE_HEADING;
+     obstacle_free_confidence = 0;
+     return;
+   }
+ 
+   // compute current color thresholds
+   int32_t color_count_threshold = oag_color_count_frac * front_camera.output_size.w * front_camera.output_size.h;
+   int32_t floor_count_threshold = oag_floor_count_frac * front_camera.output_size.w * front_camera.output_size.h;
+   float floor_centroid_frac = floor_centroid / (float)front_camera.output_size.h / 2.f;
+ 
+   VERBOSE_PRINT("state: %d \n", navigation_state);
+   // VERBOSE_PRINT("Floor count: %d, threshold: %d\n", floor_count, floor_count_threshold);
+   // VERBOSE_PRINT("Floor centroid: %f\n", floor_centroid_frac);
+   VERBOSE_PRINT("Remaining Time before heading change: %d\n", counter);
+ 
+   // update our safe confidence using color threshold
+   if(color_count < color_count_threshold){
+     obstacle_free_confidence++;
+   } else {
+     obstacle_free_confidence -= 2;  // be more cautious with positive obstacle detections
+   }
+ 
+ 
+   struct EnuCoor_i current_position;
+   float conv_position_x;
+   float conv_position_y;
+   
+   void updateCurrentPosition(void)
+   {
+     current_position.x = stateGetPositionEnu_i()->x;
+     current_position.y = stateGetPositionEnu_i()->y;
+     //conv_position_x = POS_FLOAT_OF_BFP(current_position.x);
+     //conv_position_y = POS_FLOAT_OF_BFP(current_position.y);
+   
+     //VERBOSE_PRINT("X pos without converting: %f\n", current_position.x);
+     //VERBOSE_PRINT("Y pos without converting: %f\n", current_position.y);        
+     conv_position_x = POS_FLOAT_OF_BFP(current_position.x);
+     conv_position_y = POS_FLOAT_OF_BFP(current_position.y);
+     // VERBOSE_PRINT("X pos with converting: %f\n", conv_position_x);
+     // VERBOSE_PRINT("Y pos with converting: %f\n", conv_position_y);
+     VERBOSE_PRINT("Inside obstacle zone: %s\n", InsideObstacleZone(conv_position_x, conv_position_y) ? "true" : "false");
+     uint16_t min_y = 0; // Initialize min_y variable
+     //VERBOSE_PRINT("Min y: %f\n", (float)min_y);
+     //VERBOSE_PRINT("Max y: %f\n", (float)max_y);            
+   }
+   
+   // Automatically update the current position every iteration
+   updateCurrentPosition();
+   
+   
+   float x1, y1, x2, y2; // Define variables to hold the ray endpoints
+   float pixel1 = y_centre - 10; // Define the first pixel
+   float pixel2 = y_centre + 10; // Define the second pixel
+   float ray_length = 0.5; // Define the length of the ray
+   float direction;
+   
+   
+   void calculateRayEndpoints(float pixel1, float pixel2, float *x1, float *y1, float *x2, float *y2, float ray_length) {
+     // Convert pixel values to angles
+     float angle1 = (fov_angle / im_width) * pixel1;
+     float angle2 = (fov_angle / im_width) * pixel2;
+   
+     // Get the drone's absolute position and heading
+     float drone_x = conv_position_x;
+     float drone_y = conv_position_y;
+     float drone_heading = stateGetNedToBodyEulers_f()->psi;
+   
+     // Calculate absolute angles for the rays
+     float abs_angle1 = drone_heading + angle1;
+     float abs_angle2 = drone_heading + angle2;
+   
+     // Calculate the endpoints of the rays in absolute coordinates
+     *x1 = drone_x + ray_length * cosf(abs_angle1);
+     *y1 = drone_y + ray_length * sinf(abs_angle1);
+     *x2 = drone_x + ray_length * cosf(abs_angle2);
+     *y2 = drone_y + ray_length * sinf(abs_angle2);
+   
+     // Output the coordinates for debugging
+     // VERBOSE_PRINT("Ray 1 endpoint: (%f, %f)\n", *x1, *y1);
+     // VERBOSE_PRINT("Ray 2 endpoint: (%f, %f)\n", *x2, *y2);
+   }
+   
+   int closerToOrigin(float x1, float y1, float x2, float y2, float pixel1, float pixel2, float *direction) {
+     float distance1 = x1 * x1 + y1 * y1;
+     float distance2 = x2 * x2 + y2 * y2;
+   
+     if (distance1 > distance2) {
+       *direction = pixel1;
+       return 0;
+     } else {
+       *direction = pixel2;
+       return 1;
+     }
+   }
+   
+   calculateRayEndpoints(pixel1, pixel2, &x1, &y1, &x2, &y2, ray_length);
+   closerToOrigin(x1, y1, x2, y2, pixel1, pixel2, &direction);
+     // update our safe confidence using color threshold
+     if(color_count < color_count_threshold){
+       obstacle_free_confidence++;
+     } else {
+       obstacle_free_confidence -= 2;  // be more cautious with positive obstacle detections
+     }
+ 
+   // bound obstacle_free_confidence
+   Bound(obstacle_free_confidence, 0, max_trajectory_confidence);
+ 
+   float speed_sp = fminf(oag_max_speed, 0.2f * obstacle_free_confidence);
+ 
+   // fprintf(stderr, "Recieved y_direction: %f\n", y_centre);
+   
+ 
+   switch (navigation_state){
+     case SAFE:
+     if (!InsideObstacleZone(conv_position_x, conv_position_y) && (floor_count < floor_count_threshold || fabsf(floor_centroid_frac) > 0.12)){
+       navigation_state = OUT_OF_BOUNDS;
+         counter = wait_time;
+       } else if (obstacle_free_confidence == 0){
+         navigation_state = OBSTACLE_FOUND;
+         counter = wait_time;
+       } else if (counter == 0 && confidence >= confidence_th) {
+         VERBOSE_PRINT("Confidence %d\n", confidence);
+         VERBOSE_PRINT("Confidence th %d\n", confidence_th);
+         navigation_state = SET_HEADING;
+       } else if (counter == 0){
+         guidance_h_set_body_vel(0, 0);
+         navigation_state = WAIT_FOR_CONFIRMATION;
+       }else {
+         guidance_h_set_body_vel(speed_sp, 0);
+         counter = counter - 1;
+       }
+ 
+       break;
+     case WAIT_FOR_CONFIRMATION:
+     if (!InsideObstacleZone(conv_position_x, conv_position_y) && (floor_count < floor_count_threshold || fabsf(floor_centroid_frac) > 0.12)){
+       navigation_state = OUT_OF_BOUNDS;
+         counter = wait_time;
+       } else if (obstacle_free_confidence == 0){
+         navigation_state = OBSTACLE_FOUND;
+         counter = wait_time;
+       } else if (counter == 0 && confidence >= confidence_th) {
+         VERBOSE_PRINT("Confidence %d\n", confidence);
+         VERBOSE_PRINT("Confidence th %d\n", confidence_th);
+         navigation_state = SET_HEADING;
+       } 
+       break;
+ 
+     case SET_HEADING:
+       // abs_ang = (fov_angle/im_width)*y_centre;
+       
+       abs_ang = atan((im_width - 2*direction)/im_width)*tan(fov_angle/2);
+       heading = stateGetNedToBodyEulers_f()->psi - abs_ang;
+ 
+       if (fabs(heading - stateGetNedToBodyEulers_f()->psi) < 0.08){
+         printf("No change in heading required!");
+         counter = 5;
+         navigation_state = SAFE;
+       } else {
+         fprintf(stderr, "Current Heading: %f\n", stateGetNedToBodyEulers_f()->psi);
+         fprintf(stderr, "Rotation Angle: %f\n", abs_ang); 
+         fprintf(stderr, "New Heading: %f\n", heading);  
+         
+         guidance_h_set_heading(heading);
+         // guidance_h_set_heading_rate(heading * 0.17f);
+         guidance_h_set_body_vel(turning_spd , 0);
+               
+         navigation_state = TURN_TO_HEADING;
+       }
+       break;
+ 
+     case TURN_TO_HEADING:
+       fprintf(stderr,"Heading Error: %f\n",fabsf(stateGetNedToBodyEulers_f()->psi - heading));  
+       if (!InsideObstacleZone(conv_position_x, conv_position_y) && (floor_count < floor_count_threshold || fabsf(floor_centroid_frac) > 0.12)){
+         navigation_state = OUT_OF_BOUNDS;
+         counter = wait_time;
+       } else if (obstacle_free_confidence == 0){
+         navigation_state = OBSTACLE_FOUND;
+         counter = wait_time;
+       } else if (fabsf(stateGetNedToBodyEulers_f()->psi - heading) < acceptable_heading_th || 2*3.14159f - fabsf(stateGetNedToBodyEulers_f()->psi - heading) < acceptable_heading_th){
+         counter = wait_time;
+         // guidance_h_set_heading(stateGetNedToBodyEulers_f()->psi);
+         navigation_state = SAFE;
+       } 
+     break;
+ 
+     case OBSTACLE_FOUND:
+       // stop
+       guidance_h_set_body_vel(0, 0);
+ 
+       // randomly select new search direction
+       chooseRandomIncrementAvoidance();
+ 
+       navigation_state = SEARCH_FOR_SAFE_HEADING;
+ 
+       break;
+     case SEARCH_FOR_SAFE_HEADING:
+       guidance_h_set_heading_rate(avoidance_heading_direction * oag_heading_rate);
+       fprintf(stderr, "Confidence: %d\n", obstacle_free_confidence);
+ 
+       // make sure we have a couple of good readings before declaring the way safe
+       if (obstacle_free_confidence >= 2){
+         guidance_h_set_heading(stateGetNedToBodyEulers_f()->psi);
+         navigation_state = SAFE;
+       }
+       break;
+     case OUT_OF_BOUNDS:
+       // stop
+       guidance_h_set_body_vel(0, 0);
+ 
+       // start turn back into arena
+       guidance_h_set_heading_rate(avoidance_heading_direction * RadOfDeg(15));
+ 
+       navigation_state = REENTER_ARENA;
+ 
+       break;
+     case REENTER_ARENA:
+       // force floor center to opposite side of turn to head back into arena
+       if (floor_count >= floor_count_threshold && avoidance_heading_direction * floor_centroid_frac >= 0.f){
+         // return to heading mode
+         guidance_h_set_heading(stateGetNedToBodyEulers_f()->psi);
+ 
+         // reset safe counter
+         obstacle_free_confidence = 0;
+ 
+         // ensure direction is safe before continuing
+         navigation_state = SAFE;
+       }
+       break;
+     default:
+       break;
+   }
+   return;
+ }
+ 
+ /*
+  * Sets the variable 'incrementForAvoidance' randomly positive/negative
+  */
+ uint8_t chooseRandomIncrementAvoidance(void)
+ {
+   // Randomly choose CW or CCW avoiding direction
+   if (rand() % 2 == 0) {
+     avoidance_heading_direction = 1.f;
+     VERBOSE_PRINT("Set avoidance increment to: %f\n", avoidance_heading_direction * oag_heading_rate);
+   } else {
+     avoidance_heading_direction = -1.f;
+     VERBOSE_PRINT("Set avoidance increment to: %f\n", avoidance_heading_direction * oag_heading_rate);
+   }
+   return false;
+ }
+ 
