@@ -33,6 +33,9 @@
  <settings>
     <dl_settings>
       <dl_settings name="RayPathFinder">
+
+        <dl_setting var="turning_threshold" min="-20" step="1" max="20" shortname="turning threshold"/>
+
         <dl_setting var="green.lum" min="0" step="1" max="255" shortname="green_y"/>
         <dl_setting var="green.cb" min="0" step="1" max="255" shortname="green_u"/>
         <dl_setting var="green.cr" min="0" step="1" max="255" shortname="green_v"/>
