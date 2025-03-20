@@ -12,15 +12,15 @@
       <define name="MT9V117_TARGET_FPS" value="1"/>
       
       <!-- Detect color in cyberzoo-->
-      <define name="RAY_PATH_FINDER_GREEN_LUM" value="86"/>
-      <define name="RAY_PATH_FINDER_GREEN_CB" value="84"/>
+      <define name="RAY_PATH_FINDER_GREEN_LUM" value="125"/>
+      <define name="RAY_PATH_FINDER_GREEN_CB" value="101"/>
       <define name="RAY_PATH_FINDER_GREEN_CR" value="122"/>
-      <define name="RAY_PATH_FINDER_GREEN_MARGIN" value="30"/>
+      <define name="RAY_PATH_FINDER_GREEN_MARGIN" value="20"/>
 
-      <define name="RAY_PATH_FINDER_ORANGE_LUM" value="112"/>
-      <define name="RAY_PATH_FINDER_ORANGE_CB" value="82"/>
+      <define name="RAY_PATH_FINDER_ORANGE_LUM" value="100"/>
+      <define name="RAY_PATH_FINDER_ORANGE_CB" value="110"/>
       <define name="RAY_PATH_FINDER_ORANGE_CR" value="190"/>
-      <define name="RAY_PATH_FINDER_ORANGE_MARGIN" value="40"/>
+      <define name="RAY_PATH_FINDER_ORANGE_MARGIN" value="15"/>
       
       <define name="RAY_PATH_FINDER_PURPLE_LUM" value="181"/>
       <define name="RAY_PATH_FINDER_PURPLE_CB" value="156"/>

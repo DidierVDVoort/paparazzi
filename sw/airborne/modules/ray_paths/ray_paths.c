@@ -21,7 +21,9 @@ ColorSettings brown = {0, 0, 0, 0, false};
 
 float best_angle_rad = 0;
 float best_angle_rad_instruction = 0;
+int16_t turning_action = 0;
 uint8_t best_index = 0;
+uint16_t turning_threshold = -15;
 
 // Define cost function
 int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction, float best_angle_rad);
@@ -39,11 +41,11 @@ struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute_
     -0.115f, 0.03846f, 0.1923f, 0.34615f, 0.5f, 0.65385f, 0.8077f, 0.961538f, 1.115f
   };
 
-
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   pthread_mutex_lock(&mutex);
   int16_t costs[9]; //Initialise cost matrix for 9 rays
   int16_t min_cost = INT16_MAX;
-  
+  turning_action = 1;
   best_angle_rad_instruction = 0;
 
   // Loop over nine rays and determine the cost from cost function for all nine rays
@@ -69,6 +71,9 @@ struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute_
   // Copy filtered values back to costs
   for (int i = 0; i < 9; i++) {
       costs[i] = filtered_costs[i];
+      if (costs[i] < turning_threshold && turning_action == 1){
+        turning_action = 0;
+      }
       if (costs[i] < min_cost){
         min_cost = costs[i];
         best_index = i; // Best angle is determined based on ray that has the lowest cost
@@ -79,13 +84,15 @@ struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute_
  
   uint16_t ratio = (costs[4] != 0) ? (uint16_t)(fabs((costs[best_index] - costs[4]) / (double)costs[4]) * 100.0) : 0;
 
-  if (ratio > 30){
+  if (ratio > 5){
     best_angle_rad_instruction = best_angle_rad;
-  }
-
+  } //only change steering angle if change in cost is larger than 30%
+  float local_best_angle_rad = best_angle_rad;
+  float local_entry_point_fraction = entry_point_fractions[best_index];
   pthread_mutex_unlock(&mutex);
+  ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-  draw_best_line(img, best_angle_rad, entry_point_fractions[best_index]);
+  draw_best_line(img, local_best_angle_rad, local_entry_point_fraction);
   
   fprintf(stderr, "[random_draw1] Min Cost: %d, Best Angle: %.2f degrees\n", min_cost, best_angle_rad_instruction * 180.0f / M_PI);
   
@@ -334,7 +341,7 @@ void ray_paths_periodic(void)
 {
   //fprintf(stderr, "Best Angle: %.2f degrees\n", best_angle_rad * 180.0f / M_PI);
   pthread_mutex_lock(&mutex);
-  AbiSendMsgVISUAL_DETECTION(3, 0, 0, 0, 0, (int32_t) (-0.10f*best_angle_rad_instruction * 180.0f / M_PI), 0);
+  AbiSendMsgVISUAL_DETECTION(3, turning_action, 0, 0, 0, (int32_t) (-0.10f*best_angle_rad_instruction * 180.0f / M_PI), 0);
   pthread_mutex_unlock(&mutex);
 }
 
