@@ -67,6 +67,7 @@
     <module name="telemetry" type="transparent_udp"/>
     <module name="radio_control" type="datalink"/>
     <module name="motor_mixing"/>
+    <module name="safest_bearing"/>
     <module name="actuators" type="bebop"/>
     <module name="imu" type="bebop"/>
     <module name="gps" type="datalink"/>
@@ -89,6 +90,13 @@
       <define name="VIDEO_CAPTURE_CAMERA" value="front_camera"/>
       <define name="VIDEO_CAPTURE_FPS" value="1"/>
     </module>
+
+    <module name="cv_detect_color_object">
+      <define name="COLOR_OBJECT_DETECTOR_CAMERA1" value="front_camera"/>
+      <define name="COLOR_OBJECT_DETECTOR_FPS1" value="0"/>
+      <define name="COLOR_OBJECT_DETECTOR_DRAW1" value="0"/>
+    </module>
+
     <module name="ray_paths">
     	<define name="RAY_PATH_FINDER_CAMERA1" value="front_camera"/>
       <define name="RAY_PATH_FINDER_FPS1" value="1"/>
@@ -141,8 +149,8 @@
   </command_laws>
 
   <section name="BEBOP_FRONT_CAMERA" prefix="MT9F002_">
-    <define name="OUTPUT_HEIGHT" value="520" />
-    <define name="OUTPUT_WIDTH" value="240" />
+    <define name="OUTPUT_HEIGHT" value="104" />
+    <define name="OUTPUT_WIDTH" value="48" />
     <define name="OFFSET_X" value="0.09" />
     <define name="OFFSET_Y" value="0.00" />
     <define name="ZOOM" value="1.25"/>
@@ -151,8 +159,8 @@
     <define name="GAIN_BLUE" value="12.5"/>
     <define name="GAIN_RED" value="9.0"/>
     <define name="TARGET_EXPOSURE" value="30" />
-    <!--define name="OUTPUT_SCALER" value="0.25"/>
-    <define name="TARGET_FPS" value="20" /-->
+    <!-- <define name="OUTPUT_SCALER" value="0.25"/> -->
+    <define name="TARGET_FPS" value="10" />
   </section>
 
   <section name="AIR_DATA" prefix="AIR_DATA_">

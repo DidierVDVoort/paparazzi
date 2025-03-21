@@ -39,6 +39,7 @@
     <module name="telemetry" type="transparent_udp"/>
     <module name="radio_control" type="datalink"/>
     <module name="motor_mixing"/>
+    <module name="safest_bearing"/>
     <module name="actuators" type="bebop"/>
     <module name="imu" type="bebop"/>
     <module name="gps" type="datalink"/>
@@ -112,8 +113,8 @@
   </command_laws>
 
   <section name="BEBOP_FRONT_CAMERA" prefix="MT9F002_">
-    <define name="OUTPUT_HEIGHT" value="520" />
-    <define name="OUTPUT_WIDTH" value="240" />
+    <define name="OUTPUT_HEIGHT" value="104" />
+    <define name="OUTPUT_WIDTH" value="48" />
     <define name="OFFSET_X" value="0.09" />
     <define name="OFFSET_Y" value="0.00" />
     <define name="ZOOM" value="1.25"/>
