@@ -92,7 +92,7 @@ struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute_
   pthread_mutex_unlock(&mutex);
   ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-  draw_best_line(img, local_best_angle_rad, local_entry_point_fraction);
+  // draw_best_line(img, local_best_angle_rad, local_entry_point_fraction);
   
   fprintf(stderr, "[random_draw1] Min Cost: %d, Best Angle: %.2f degrees\n", min_cost, best_angle_rad_instruction * 180.0f / M_PI);
   
@@ -262,8 +262,9 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
       (*vp >= cr_min_gr ) && (*vp <= cr_max_gr ))
      
       {
-        int texture_score = compute_texture_score(buffer, width, height, x, y);
-        if (texture_score < 20) cost -= weight;
+        // int texture_score = compute_texture_score(buffer, width, height, x, y);
+        // if (texture_score < 20) cost -= weight;
+        cost -= weight;
       } 
       
       // Increase cost when orange is near to drone

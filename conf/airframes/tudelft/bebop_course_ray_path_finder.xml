@@ -25,12 +25,12 @@
       <define name="RAY_PATH_FINDER_PURPLE_LUM" value="181"/>
       <define name="RAY_PATH_FINDER_PURPLE_CB" value="156"/>
       <define name="RAY_PATH_FINDER_PURPLE_CR" value="130"/>
-      <define name="RAY_PATH_FINDER_PURPLE_MARGIN" value="40"/>
+      <define name="RAY_PATH_FINDER_PURPLE_MARGIN" value="20"/>
       
       <define name="RAY_PATH_FINDER_BROWN_LUM" value="52"/>
       <define name="RAY_PATH_FINDER_BROWN_CB" value="101"/>
       <define name="RAY_PATH_FINDER_BROWN_CR" value="138"/>
-      <define name="RAY_PATH_FINDER_BROWN_MARGIN" value="40"/>
+      <define name="RAY_PATH_FINDER_BROWN_MARGIN" value="20"/>
       
      
     </target>
@@ -40,25 +40,25 @@
       <define name="LOGGER_FILE_PATH" value="/tmp/paparazzi/log"/>
       
       <!-- Detect orange in simulation-->
-      <define name="RAY_PATH_FINDER_GREEN_LUM" value="86"/>
+      <define name="RAY_PATH_FINDER_GREEN_LUM" value="88"/>
       <define name="RAY_PATH_FINDER_GREEN_CB" value="84"/>
       <define name="RAY_PATH_FINDER_GREEN_CR" value="122"/>
-      <define name="RAY_PATH_FINDER_GREEN_MARGIN" value="30"/>
+      <define name="RAY_PATH_FINDER_GREEN_MARGIN" value="15"/>
 
-      <define name="RAY_PATH_FINDER_ORANGE_LUM" value="112"/>
-      <define name="RAY_PATH_FINDER_ORANGE_CB" value="82"/>
-      <define name="RAY_PATH_FINDER_ORANGE_CR" value="190"/>
-      <define name="RAY_PATH_FINDER_ORANGE_MARGIN" value="40"/>
+      <define name="RAY_PATH_FINDER_ORANGE_LUM" value="105"/>
+      <define name="RAY_PATH_FINDER_ORANGE_CB" value="100"/>
+      <define name="RAY_PATH_FINDER_ORANGE_CR" value="182"/>
+      <define name="RAY_PATH_FINDER_ORANGE_MARGIN" value="10"/>
       
       <define name="RAY_PATH_FINDER_PURPLE_LUM" value="181"/>
       <define name="RAY_PATH_FINDER_PURPLE_CB" value="156"/>
       <define name="RAY_PATH_FINDER_PURPLE_CR" value="130"/>
-      <define name="RAY_PATH_FINDER_PURPLE_MARGIN" value="40"/>
+      <define name="RAY_PATH_FINDER_PURPLE_MARGIN" value="15"/>
       
-      <define name="RAY_PATH_FINDER_BROWN_LUM" value="52"/>
-      <define name="RAY_PATH_FINDER_BROWN_CB" value="101"/>
-      <define name="RAY_PATH_FINDER_BROWN_CR" value="138"/>
-      <define name="RAY_PATH_FINDER_BROWN_MARGIN" value="20"/>
+      <define name="RAY_PATH_FINDER_BROWN_LUM" value="70"/>
+      <define name="RAY_PATH_FINDER_BROWN_CB" value="125"/>
+      <define name="RAY_PATH_FINDER_BROWN_CR" value="125"/>
+      <define name="RAY_PATH_FINDER_BROWN_MARGIN" value="5"/>
     </target>
     
     <define name="ARRIVED_AT_WAYPOINT" value="0.3"/><!-- Detect arrival at waypoint when within 0.3m -->
