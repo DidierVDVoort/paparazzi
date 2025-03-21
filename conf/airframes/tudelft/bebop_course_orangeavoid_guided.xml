@@ -135,6 +135,7 @@
     <define name="GAIN_BLUE" value="12.5"/>
     <define name="GAIN_RED" value="9.0"/>
     <define name="TARGET_EXPOSURE" value="30" />
+    <define name="TARGET_FPS" value="20" />
   </section>
 
   <section name="AIR_DATA" prefix="AIR_DATA_">
