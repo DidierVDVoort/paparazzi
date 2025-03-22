@@ -97,7 +97,7 @@ void orange_avoider_init(void)
   chooseRandomIncrementAvoidance();
 
   // bind our colorfilter callbacks to receive the color filter outputs
-  AbiBindMsgVISUAL_DETECTION(3, &color_detection_ev, color_detection_cb);
+  AbiBindMsgVISUAL_DETECTION(4, &color_detection_ev, color_detection_cb);
 }
 
 /*

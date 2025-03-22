@@ -17,6 +17,7 @@ static pthread_mutex_t mutex;
 
 float bearings_tensor[1][2];
 float center_y;
+float safest_bearing_rad_instruction = 0;
 int16_t turn = 0;
 
 void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_max_bearing, float (*tensor_41)[1][2]);
@@ -192,8 +193,15 @@ void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_ma
 
     // Update the global center_y
     pthread_mutex_lock(&mutex);
-    center_y = (min_y + max_y) / 2;  // Set the global center_y value
+    center_y = (min_bearing + max_bearing) / 2;  // Set the global center_y value
+    // Normalize the center_y (it should already be between 0 and 1)
+    // Calculate angle in radians using atan2
+    float dy = center_y - 0.5f;  // Vertical difference from the center
+    float dx = 0.5f;             // Horizontal difference (constant)
+    float safest_bearing_rad_instruction = atan2(dy, dx);  // Angle in radians
     pthread_mutex_unlock(&mutex);
+
+    fprintf(stderr, "[random_draw] Center Y: %f, Best Angle: %.2f degrees\n", center_y, safest_bearing_rad_instruction * 180.0f / M_PI);
 }
 
 void safest_bearing_periodic(void)
@@ -202,7 +210,7 @@ void safest_bearing_periodic(void)
     pthread_mutex_lock(&mutex);
 
     // Now you can safely use the center_y value in a thread-safe manner
-    AbiSendMsgVISUAL_DETECTION(3, turn, 0, 0, 0, (int32_t) center_y, 0);
+    AbiSendMsgVISUAL_DETECTION(4, turn, 0, 0, 0, (int32_t) (-0.10f*safest_bearing_rad_instruction * 180.0f / M_PI), 0);
 
     // Unlock the mutex after using center_y
     pthread_mutex_unlock(&mutex);
