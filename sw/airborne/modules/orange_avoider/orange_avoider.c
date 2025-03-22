@@ -84,7 +84,8 @@ static void color_detection_cb(uint8_t __attribute__((unused)) sender_id,
                                int32_t best_heading_angle, int16_t __attribute__((unused)) extra)
 {
   heading_setpoint = best_heading_angle;
-  turn_around = mighty_mike;
+  // turn_around = mighty_mike;
+  turn_around = 0;
 }
 
 /*
