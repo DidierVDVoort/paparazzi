@@ -6,7 +6,9 @@
 
 // Filter Settings
 typedef struct {
-  uint8_t margin;
+  uint8_t margin_lum;
+  uint8_t margin_cb;
+  uint8_t margin_cr;
   uint8_t lum;
   uint8_t cb;
   uint8_t cr;

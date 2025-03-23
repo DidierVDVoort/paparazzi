@@ -13,10 +13,10 @@
 static pthread_mutex_t mutex;
 
 // Filter Settings
-ColorSettings green = {0, 0, 0, 0, false};
-ColorSettings orange = {0, 0, 0, 0, false};
-ColorSettings purple = {0, 0, 0, 0, false};
-ColorSettings brown = {0, 0, 0, 0, false};
+ColorSettings green = {0, 0, 0, 0, 0, 0, false};
+ColorSettings orange = {0, 0, 0, 0, 0, 0, false};
+ColorSettings purple = {0, 0, 0, 0, 0, 0, false};
+ColorSettings brown = {0, 0, 0, 0, 0, 0, false};
 
 
 float best_angle_rad = 0;
@@ -30,8 +30,8 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
 void draw_best_line(struct image_t *img, float alpha, float entry_point_fraction);
 int16_t compute_texture_score(uint8_t *buffer, int width, int height, int x, int y);
 
-struct image_t *random_draw1(struct image_t *img, uint8_t camera_id);
-struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute__((unused)))
+struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id);
+struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attribute__((unused)))
 {
   static const float angles[] = {
     72.65f, 67.38f, 57.99f, 38.66f, 0, -38.66f, -57.99f, -67.38f, -72.65f
@@ -117,46 +117,46 @@ void ray_paths_init(void)
   #endif
   
   #ifdef RAY_PATH_FINDER_GREEN_LUM
-  green.lum = RAY_PATH_FINDER_GREEN_LUM;
-  green.cb = RAY_PATH_FINDER_GREEN_CB;
-  green.cr = RAY_PATH_FINDER_GREEN_CR;
-  green.margin = RAY_PATH_FINDER_GREEN_MARGIN;
-#endif
-#ifdef RAY_PATH_FINDER_GREEN_DRAW
-  green.draw = RAY_PATH_FINDER_GREEN_DRAW;
-#endif
+    green.lum = RAY_PATH_FINDER_GREEN_LUM;
+    green.cb = RAY_PATH_FINDER_GREEN_CB;
+    green.cr = RAY_PATH_FINDER_GREEN_CR;
+    green.margin_lum = RAY_PATH_FINDER_GREEN_MARGIN_LUM;
+    green.margin_cb = RAY_PATH_FINDER_GREEN_MARGIN_CB;
+    green.margin_cr = RAY_PATH_FINDER_GREEN_MARGIN_CR;
+    green.draw = RAY_PATH_FINDER_GREEN_DRAW;
+  #endif
 
-#ifdef RAY_PATH_FINDER_ORANGE_LUM
-  orange.lum = RAY_PATH_FINDER_ORANGE_LUM;
-  orange.cb = RAY_PATH_FINDER_ORANGE_CB;
-  orange.cr = RAY_PATH_FINDER_ORANGE_CR;
-  orange.margin = RAY_PATH_FINDER_ORANGE_MARGIN;
-#endif
-#ifdef RAY_PATH_FINDER_ORANGE_DRAW
-  orange.draw = RAY_PATH_FINDER_ORANGE_DRAW;
-#endif
+  #ifdef RAY_PATH_FINDER_ORANGE_LUM
+    orange.lum = RAY_PATH_FINDER_ORANGE_LUM;
+    orange.cb = RAY_PATH_FINDER_ORANGE_CB;
+    orange.cr = RAY_PATH_FINDER_ORANGE_CR;
+    orange.margin_lum = RAY_PATH_FINDER_ORANGE_MARGIN_LUM;
+    orange.margin_cb = RAY_PATH_FINDER_ORANGE_MARGIN_CB;
+    orange.margin_cr = RAY_PATH_FINDER_ORANGE_MARGIN_CR;
+    orange.draw = RAY_PATH_FINDER_ORANGE_DRAW;
+  #endif
 
-#ifdef RAY_PATH_FINDER_PURPLE_LUM
-  purple.lum = RAY_PATH_FINDER_PURPLE_LUM;
-  purple.cb = RAY_PATH_FINDER_PURPLE_CB;
-  purple.cr = RAY_PATH_FINDER_PURPLE_CR;
-  purple.margin = RAY_PATH_FINDER_PURPLE_MARGIN;
-#endif
-#ifdef RAY_PATH_FINDER_PURPLE_DRAW
-  purple.draw = RAY_PATH_FINDER_PURPLE_DRAW;
-#endif
+  #ifdef RAY_PATH_FINDER_PURPLE_LUM
+    purple.lum = RAY_PATH_FINDER_PURPLE_LUM;
+    purple.cb = RAY_PATH_FINDER_PURPLE_CB;
+    purple.cr = RAY_PATH_FINDER_PURPLE_CR;
+    purple.margin_lum = RAY_PATH_FINDER_PURPLE_MARGIN_LUM;
+    purple.margin_cb = RAY_PATH_FINDER_PURPLE_MARGIN_CB;
+    purple.margin_cr = RAY_PATH_FINDER_PURPLE_MARGIN_CR;
+    purple.draw = RAY_PATH_FINDER_PURPLE_DRAW;
+  #endif
 
-#ifdef RAY_PATH_FINDER_BROWN_LUM
-  brown.lum = RAY_PATH_FINDER_BROWN_LUM;
-  brown.cb = RAY_PATH_FINDER_BROWN_CB;
-  brown.cr = RAY_PATH_FINDER_BROWN_CR;
-  brown.margin = RAY_PATH_FINDER_BROWN_MARGIN;
-#endif
-#ifdef RAY_PATH_FINDER_BROWN_DRAW
-  brown.draw = RAY_PATH_FINDER_BROWN_DRAW;
-#endif
+  #ifdef RAY_PATH_FINDER_BROWN_LUM
+    brown.lum = RAY_PATH_FINDER_BROWN_LUM;
+    brown.cb = RAY_PATH_FINDER_BROWN_CB;
+    brown.cr = RAY_PATH_FINDER_BROWN_CR;
+    brown.margin_lum = RAY_PATH_FINDER_BROWN_MARGIN_LUM;
+    brown.margin_cb = RAY_PATH_FINDER_BROWN_MARGIN_CB;
+    brown.margin_cr = RAY_PATH_FINDER_BROWN_MARGIN_CR;
+    brown.draw = RAY_PATH_FINDER_BROWN_DRAW;
+  #endif
 
-  cv_add_to_device(&RAY_PATH_FINDER_CAMERA1, random_draw1, RAY_PATH_FINDER_FPS1, 0);
+  cv_add_to_device(&RAY_PATH_FINDER_CAMERA1, compute_ray_costs, RAY_PATH_FINDER_FPS1, 0);
 }
 
 int16_t compute_texture_score(uint8_t *buffer, int width, int height, int x, int y){
@@ -188,34 +188,34 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
   int width = img->w, height = img->h;
   float slope = tan(alpha);
 
-    // Define color ranges
-    uint8_t lum_min_gr = green.lum - green.margin;
-    uint8_t lum_max_gr = green.lum + green.margin;
-    uint8_t cb_min_gr = green.cb - green.margin;
-    uint8_t cb_max_gr = green.cb + green.margin;
-    uint8_t cr_min_gr = green.cr - green.margin;
-    uint8_t cr_max_gr = green.cr + green.margin;
+  // Define color ranges
+  uint8_t lum_min_gr = green.lum - green.margin_lum;
+  uint8_t lum_max_gr = green.lum + green.margin_lum;
+  uint8_t cb_min_gr = green.cb - green.margin_cb;
+  uint8_t cb_max_gr = green.cb + green.margin_cb;
+  uint8_t cr_min_gr = green.cr - green.margin_cr;
+  uint8_t cr_max_gr = green.cr + green.margin_cr;
 
-    uint8_t lum_min_or = orange.lum - orange.margin;
-    uint8_t lum_max_or = orange.lum + orange.margin;
-    uint8_t cb_min_or = orange.cb - orange.margin;
-    uint8_t cb_max_or = orange.cb + orange.margin;
-    uint8_t cr_min_or = orange.cr - orange.margin;
-    uint8_t cr_max_or = orange.cr + orange.margin;
+  uint8_t lum_min_or = orange.lum - orange.margin_lum;
+  uint8_t lum_max_or = orange.lum + orange.margin_lum;
+  uint8_t cb_min_or = orange.cb - orange.margin_cb;
+  uint8_t cb_max_or = orange.cb + orange.margin_cb;
+  uint8_t cr_min_or = orange.cr - orange.margin_cr;
+  uint8_t cr_max_or = orange.cr + orange.margin_cr;
 
-    uint8_t lum_min_pp = purple.lum - purple.margin;
-    uint8_t lum_max_pp = purple.lum + purple.margin;
-    uint8_t cb_min_pp = purple.cb - purple.margin;
-    uint8_t cb_max_pp = purple.cb + purple.margin;
-    uint8_t cr_min_pp = purple.cr - purple.margin;
-    uint8_t cr_max_pp = purple.cr + purple.margin;
+  uint8_t lum_min_pp = purple.lum - purple.margin_lum;
+  uint8_t lum_max_pp = purple.lum + purple.margin_lum;
+  uint8_t cb_min_pp = purple.cb - purple.margin_cb;
+  uint8_t cb_max_pp = purple.cb + purple.margin_cb;
+  uint8_t cr_min_pp = purple.cr - purple.margin_cr;
+  uint8_t cr_max_pp = purple.cr + purple.margin_cr;
 
-    uint8_t lum_min_br = brown.lum - brown.margin;
-    uint8_t lum_max_br = brown.lum + brown.margin;
-    uint8_t cb_min_br = brown.cb - brown.margin;
-    uint8_t cb_max_br = brown.cb + brown.margin;
-    uint8_t cr_min_br = brown.cr - brown.margin;
-    uint8_t cr_max_br = brown.cr + brown.margin;
+  uint8_t lum_min_br = brown.lum - brown.margin_lum;
+  uint8_t lum_max_br = brown.lum + brown.margin_lum;
+  uint8_t cb_min_br = brown.cb - brown.margin_cb;
+  uint8_t cb_max_br = brown.cb + brown.margin_cb;
+  uint8_t cr_min_br = brown.cr - brown.margin_cr;
+  uint8_t cr_max_br = brown.cr + brown.margin_cr;
 
 
   // Loop through half of x-values

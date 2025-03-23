@@ -34,45 +34,41 @@ void ray_paths_calibration_init(void)
   #define RAY_PATH_CALIBRATION_FPS 0 ///< Default FPS (zero means run at camera fps)
   #endif
   
-  #ifdef RAY_PATH_FINDER_GREEN_LUM
-    green.lum = RAY_PATH_FINDER_GREEN_LUM;
-    green.cb = RAY_PATH_FINDER_GREEN_CB;
-    green.cr = RAY_PATH_FINDER_GREEN_CR;
-    green.margin = RAY_PATH_FINDER_GREEN_MARGIN;
-  #endif
-  #ifdef RAY_PATH_FINDER_GREEN_DRAW
-    green.draw = RAY_PATH_FINDER_GREEN_DRAW;
-  #endif
+    #ifdef RAY_PATH_FINDER_GREEN_LUM
+      green.lum = RAY_PATH_FINDER_GREEN_LUM;
+      green.cb = RAY_PATH_FINDER_GREEN_CB;
+      green.cr = RAY_PATH_FINDER_GREEN_CR;
+      green.margin_lum = RAY_PATH_FINDER_GREEN_MARGIN_LUM;
+      green.margin_cb = RAY_PATH_FINDER_GREEN_MARGIN_CB;
+      green.margin_cr = RAY_PATH_FINDER_GREEN_MARGIN_CR;
+    #endif
 
-  #ifdef RAY_PATH_FINDER_ORANGE_LUM
-    orange.lum = RAY_PATH_FINDER_ORANGE_LUM;
-    orange.cb = RAY_PATH_FINDER_ORANGE_CB;
-    orange.cr = RAY_PATH_FINDER_ORANGE_CR;
-    orange.margin = RAY_PATH_FINDER_ORANGE_MARGIN;
-  #endif
-  #ifdef RAY_PATH_FINDER_ORANGE_DRAW
-    orange.draw = RAY_PATH_FINDER_ORANGE_DRAW;
-  #endif
+    #ifdef RAY_PATH_FINDER_ORANGE_LUM
+      orange.lum = RAY_PATH_FINDER_ORANGE_LUM;
+      orange.cb = RAY_PATH_FINDER_ORANGE_CB;
+      orange.cr = RAY_PATH_FINDER_ORANGE_CR;
+      orange.margin_lum = RAY_PATH_FINDER_ORANGE_MARGIN_LUM;
+      orange.margin_cb = RAY_PATH_FINDER_ORANGE_MARGIN_CB;
+      orange.margin_cr = RAY_PATH_FINDER_ORANGE_MARGIN_CR;
+    #endif
 
-  #ifdef RAY_PATH_FINDER_PURPLE_LUM
-    purple.lum = RAY_PATH_FINDER_PURPLE_LUM;
-    purple.cb = RAY_PATH_FINDER_PURPLE_CB;
-    purple.cr = RAY_PATH_FINDER_PURPLE_CR;
-    purple.margin = RAY_PATH_FINDER_PURPLE_MARGIN;
-  #endif
-  #ifdef RAY_PATH_FINDER_PURPLE_DRAW
-    purple.draw = RAY_PATH_FINDER_PURPLE_DRAW;
-  #endif
+    #ifdef RAY_PATH_FINDER_PURPLE_LUM
+      purple.lum = RAY_PATH_FINDER_PURPLE_LUM;
+      purple.cb = RAY_PATH_FINDER_PURPLE_CB;
+      purple.cr = RAY_PATH_FINDER_PURPLE_CR;
+      purple.margin_lum = RAY_PATH_FINDER_PURPLE_MARGIN_LUM;
+      purple.margin_cb = RAY_PATH_FINDER_PURPLE_MARGIN_CB;
+      purple.margin_cr = RAY_PATH_FINDER_PURPLE_MARGIN_CR;
+    #endif
 
-  #ifdef RAY_PATH_FINDER_BROWN_LUM
-    brown.lum = RAY_PATH_FINDER_BROWN_LUM;
-    brown.cb = RAY_PATH_FINDER_BROWN_CB;
-    brown.cr = RAY_PATH_FINDER_BROWN_CR;
-    brown.margin = RAY_PATH_FINDER_BROWN_MARGIN;
-  #endif
-  #ifdef RAY_PATH_FINDER_BROWN_DRAW
-    brown.draw = RAY_PATH_FINDER_BROWN_DRAW;
-  #endif
+    #ifdef RAY_PATH_FINDER_BROWN_LUM
+      brown.lum = RAY_PATH_FINDER_BROWN_LUM;
+      brown.cb = RAY_PATH_FINDER_BROWN_CB;
+      brown.cr = RAY_PATH_FINDER_BROWN_CR;
+      brown.margin_lum = RAY_PATH_FINDER_BROWN_MARGIN_LUM;
+      brown.margin_cb = RAY_PATH_FINDER_BROWN_MARGIN_CB;
+      brown.margin_cr = RAY_PATH_FINDER_BROWN_MARGIN_CR;
+    #endif
 
   cv_add_to_device(&RAY_PATH_FINDER_CAMERA1, image_func, RAY_PATH_CALIBRATION_FPS, 0);
 }
@@ -95,12 +91,12 @@ void show_color_filter(struct image_t *img)
 
   // Precompute min/max values
   for (size_t i = 0; i < color_count; i++) {
-      ranges[i].lum_min = colors[i].lum - colors[i].margin;
-      ranges[i].lum_max = colors[i].lum + colors[i].margin;
-      ranges[i].cb_min = colors[i].cb - colors[i].margin;
-      ranges[i].cb_max = colors[i].cb + colors[i].margin;
-      ranges[i].cr_min = colors[i].cr - colors[i].margin;
-      ranges[i].cr_max = colors[i].cr + colors[i].margin;
+      ranges[i].lum_min = colors[i].lum - colors[i].margin_lum;
+      ranges[i].lum_max = colors[i].lum + colors[i].margin_lum;
+      ranges[i].cb_min = colors[i].cb - colors[i].margin_cb;
+      ranges[i].cb_max = colors[i].cb + colors[i].margin_cb;
+      ranges[i].cr_min = colors[i].cr - colors[i].margin_cr;
+      ranges[i].cr_max = colors[i].cr + colors[i].margin_cr;
       ranges[i].draw = colors[i].draw;
   }
 
