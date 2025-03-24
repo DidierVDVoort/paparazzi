@@ -81,7 +81,7 @@
  float turning_spd = 0.0f;
  
  void calculateRayEndpoints(float pixel1, float pixel2, float *x1, float *y1, float *x2, float *y2, float ray_length);
- static int closerToOrigin(float x1, float y1, float x2, float y2, float pixel1, float pixel2, float *direction);
+//  int closerToOrigin(float x1, float y1, float x2, float y2, float pixel1, float pixel2, float *direction);
  
  // define and initialise global variables
  enum navigation_state_t navigation_state = SEARCH_FOR_SAFE_HEADING;   // current state in state machine
@@ -236,21 +236,21 @@
      // VERBOSE_PRINT("Ray 2 endpoint: (%f, %f)\n", *x2, *y2);
    }
    
-   int closerToOrigin(float x1, float y1, float x2, float y2, float pixel1, float pixel2, float *direction) {
-     float distance1 = x1 * x1 + y1 * y1;
-     float distance2 = x2 * x2 + y2 * y2;
+  //  int closerToOrigin(float x1, float y1, float x2, float y2, float pixel1, float pixel2, float *direction) {
+  //    float distance1 = x1 * x1 + y1 * y1;
+  //    float distance2 = x2 * x2 + y2 * y2;
    
-     if (distance1 > distance2) {
-       *direction = pixel1;
-       return 0;
-     } else {
-       *direction = pixel2;
-       return 1;
-     }
-   }
+  //    if (distance1 > distance2) {
+  //      *direction = pixel1;
+  //      return 0;
+  //    } else {
+  //      *direction = pixel2;
+  //      return 1;
+  //    }
+  //  }
    
    calculateRayEndpoints(pixel1, pixel2, &x1, &y1, &x2, &y2, ray_length);
-   closerToOrigin(x1, y1, x2, y2, pixel1, pixel2, &direction);
+  //  closerToOrigin(x1, y1, x2, y2, pixel1, pixel2, &direction);
      // update our safe confidence using color threshold
      if(color_count < color_count_threshold){
        obstacle_free_confidence++;
