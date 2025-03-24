@@ -49,7 +49,7 @@
       </program>
       <program name="NatNet3">
         <arg flag="-ac" constant="4"/>
-        <arg flag="42"/>
+        <arg flag="44"/>
         <arg flag="-xa" constant="57"/>
         <arg flag="-an" constant="far"/>
         <arg flag="-le" constant="far"/>

@@ -116,43 +116,43 @@ void ray_paths_init(void)
   #define RAY_PATH_FINDER_FPS1 0 ///< Default FPS (zero means run at camera fps)
   #endif
   
-  #ifdef RAY_PATH_FINDER_GREEN_LUM
-    green.lum = RAY_PATH_FINDER_GREEN_LUM;
-    green.cb = RAY_PATH_FINDER_GREEN_CB;
-    green.cr = RAY_PATH_FINDER_GREEN_CR;
-    green.margin_lum = RAY_PATH_FINDER_GREEN_MARGIN_LUM;
-    green.margin_cb = RAY_PATH_FINDER_GREEN_MARGIN_CB;
-    green.margin_cr = RAY_PATH_FINDER_GREEN_MARGIN_CR;
+  #ifdef RAY_PATH_FINDER_GREEN_LUM_MIN
+    green.lum_min = RAY_PATH_FINDER_GREEN_LUM_MIN;
+    green.lum_max = RAY_PATH_FINDER_GREEN_LUM_MAX;
+    green.cb_min = RAY_PATH_FINDER_GREEN_CB_MIN;
+    green.cb_max = RAY_PATH_FINDER_GREEN_CB_MAX;
+    green.cr_min = RAY_PATH_FINDER_GREEN_CR_MIN;
+    green.cr_max = RAY_PATH_FINDER_GREEN_CR_MAX;
     green.draw = RAY_PATH_FINDER_GREEN_DRAW;
   #endif
 
-  #ifdef RAY_PATH_FINDER_ORANGE_LUM
-    orange.lum = RAY_PATH_FINDER_ORANGE_LUM;
-    orange.cb = RAY_PATH_FINDER_ORANGE_CB;
-    orange.cr = RAY_PATH_FINDER_ORANGE_CR;
-    orange.margin_lum = RAY_PATH_FINDER_ORANGE_MARGIN_LUM;
-    orange.margin_cb = RAY_PATH_FINDER_ORANGE_MARGIN_CB;
-    orange.margin_cr = RAY_PATH_FINDER_ORANGE_MARGIN_CR;
+  #ifdef RAY_PATH_FINDER_ORANGE_LUM_MIN
+    orange.lum_min = RAY_PATH_FINDER_ORANGE_LUM_MIN;
+    orange.lum_max = RAY_PATH_FINDER_ORANGE_LUM_MAX;
+    orange.cb_min = RAY_PATH_FINDER_ORANGE_CB_MIN;
+    orange.cb_max = RAY_PATH_FINDER_ORANGE_CB_MAX;
+    orange.cr_min = RAY_PATH_FINDER_ORANGE_CR_MIN;
+    orange.cr_max = RAY_PATH_FINDER_ORANGE_CR_MAX;
     orange.draw = RAY_PATH_FINDER_ORANGE_DRAW;
   #endif
 
-  #ifdef RAY_PATH_FINDER_PURPLE_LUM
-    purple.lum = RAY_PATH_FINDER_PURPLE_LUM;
-    purple.cb = RAY_PATH_FINDER_PURPLE_CB;
-    purple.cr = RAY_PATH_FINDER_PURPLE_CR;
-    purple.margin_lum = RAY_PATH_FINDER_PURPLE_MARGIN_LUM;
-    purple.margin_cb = RAY_PATH_FINDER_PURPLE_MARGIN_CB;
-    purple.margin_cr = RAY_PATH_FINDER_PURPLE_MARGIN_CR;
+  #ifdef RAY_PATH_FINDER_PURPLE_LUM_MIN
+    purple.lum_min = RAY_PATH_FINDER_PURPLE_LUM_MIN;
+    purple.lum_max = RAY_PATH_FINDER_PURPLE_LUM_MAX;
+    purple.cb_min = RAY_PATH_FINDER_PURPLE_CB_MIN;
+    purple.cb_max = RAY_PATH_FINDER_PURPLE_CB_MAX;
+    purple.cr_min = RAY_PATH_FINDER_PURPLE_CR_MIN;
+    purple.cr_max = RAY_PATH_FINDER_PURPLE_CR_MAX;
     purple.draw = RAY_PATH_FINDER_PURPLE_DRAW;
   #endif
 
-  #ifdef RAY_PATH_FINDER_BROWN_LUM
-    brown.lum = RAY_PATH_FINDER_BROWN_LUM;
-    brown.cb = RAY_PATH_FINDER_BROWN_CB;
-    brown.cr = RAY_PATH_FINDER_BROWN_CR;
-    brown.margin_lum = RAY_PATH_FINDER_BROWN_MARGIN_LUM;
-    brown.margin_cb = RAY_PATH_FINDER_BROWN_MARGIN_CB;
-    brown.margin_cr = RAY_PATH_FINDER_BROWN_MARGIN_CR;
+  #ifdef RAY_PATH_FINDER_BROWN_LUM_MIN
+    brown.lum_min = RAY_PATH_FINDER_BROWN_LUM_MIN;
+    brown.lum_max = RAY_PATH_FINDER_BROWN_LUM_MAX;
+    brown.cb_min = RAY_PATH_FINDER_BROWN_CB_MIN;
+    brown.cb_max = RAY_PATH_FINDER_BROWN_CB_MAX;
+    brown.cr_min = RAY_PATH_FINDER_BROWN_CR_MIN;
+    brown.cr_max = RAY_PATH_FINDER_BROWN_CR_MAX;
     brown.draw = RAY_PATH_FINDER_BROWN_DRAW;
   #endif
 
@@ -188,34 +188,33 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
   int width = img->w, height = img->h;
   float slope = tan(alpha);
 
-  // Define color ranges
-  uint8_t lum_min_gr = green.lum - green.margin_lum;
-  uint8_t lum_max_gr = green.lum + green.margin_lum;
-  uint8_t cb_min_gr = green.cb - green.margin_cb;
-  uint8_t cb_max_gr = green.cb + green.margin_cb;
-  uint8_t cr_min_gr = green.cr - green.margin_cr;
-  uint8_t cr_max_gr = green.cr + green.margin_cr;
+  uint8_t lum_min_gr = green.lum_min;
+  uint8_t lum_max_gr = green.lum_max;
+  uint8_t cb_min_gr = green.cb_min;
+  uint8_t cb_max_gr = green.cb_max;
+  uint8_t cr_min_gr = green.cr_min;
+  uint8_t cr_max_gr = green.cr_max;
 
-  uint8_t lum_min_or = orange.lum - orange.margin_lum;
-  uint8_t lum_max_or = orange.lum + orange.margin_lum;
-  uint8_t cb_min_or = orange.cb - orange.margin_cb;
-  uint8_t cb_max_or = orange.cb + orange.margin_cb;
-  uint8_t cr_min_or = orange.cr - orange.margin_cr;
-  uint8_t cr_max_or = orange.cr + orange.margin_cr;
+  uint8_t lum_min_or = orange.lum_min;
+  uint8_t lum_max_or = orange.lum_max;
+  uint8_t cb_min_or = orange.cb_min;
+  uint8_t cb_max_or = orange.cb_max;
+  uint8_t cr_min_or = orange.cr_min;
+  uint8_t cr_max_or = orange.cr_max;
 
-  uint8_t lum_min_pp = purple.lum - purple.margin_lum;
-  uint8_t lum_max_pp = purple.lum + purple.margin_lum;
-  uint8_t cb_min_pp = purple.cb - purple.margin_cb;
-  uint8_t cb_max_pp = purple.cb + purple.margin_cb;
-  uint8_t cr_min_pp = purple.cr - purple.margin_cr;
-  uint8_t cr_max_pp = purple.cr + purple.margin_cr;
+  uint8_t lum_min_pp = purple.lum_min;
+  uint8_t lum_max_pp = purple.lum_max;
+  uint8_t cb_min_pp = purple.cb_min;
+  uint8_t cb_max_pp = purple.cb_max;
+  uint8_t cr_min_pp = purple.cr_min;
+  uint8_t cr_max_pp = purple.cr_max;
 
-  uint8_t lum_min_br = brown.lum - brown.margin_lum;
-  uint8_t lum_max_br = brown.lum + brown.margin_lum;
-  uint8_t cb_min_br = brown.cb - brown.margin_cb;
-  uint8_t cb_max_br = brown.cb + brown.margin_cb;
-  uint8_t cr_min_br = brown.cr - brown.margin_cr;
-  uint8_t cr_max_br = brown.cr + brown.margin_cr;
+  uint8_t lum_min_br = brown.lum_min;
+  uint8_t lum_max_br = brown.lum_max;
+  uint8_t cb_min_br = brown.cb_min;
+  uint8_t cb_max_br = brown.cb_max;
+  uint8_t cr_min_br = brown.cr_min;
+  uint8_t cr_max_br = brown.cr_max;
 
 
   // Loop through half of x-values
