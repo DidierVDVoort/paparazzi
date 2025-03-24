@@ -20,8 +20,8 @@ extern ColorSettings orange;
 extern ColorSettings purple;
 extern ColorSettings brown;
 
-extern float best_angle_rad;
-extern float best_angle_rad_instruction;
+extern float best_angle_deg;
+extern float best_angle_deg_instruction;
 extern int16_t turning_threshold;
 
 // Module functions

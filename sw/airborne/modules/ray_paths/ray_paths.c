@@ -19,8 +19,8 @@ ColorSettings purple = {0, 0, 0, 0, 0, 0, false};
 ColorSettings brown = {0, 0, 0, 0, 0, 0, false};
 
 
-float best_angle_rad = 0;
-float best_angle_rad_instruction = 0;
+float best_angle_deg = 0;
+float best_angle_deg_instruction = 0;
 int16_t turning_action = 0;
 uint8_t best_index = 0;
 int16_t turning_threshold = -15;
@@ -30,7 +30,7 @@ int16_t prev3[9] = {0};
 int16_t prev4[9] = {0};
 
 // Define cost function
-int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction, float best_angle_rad);
+int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction, float best_angle_deg);
 void draw_best_line(struct image_t *img, float alpha, float entry_point_fraction);
 int16_t compute_texture_score(uint8_t *buffer, int width, int height, int x, int y);
 
@@ -51,11 +51,11 @@ struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attri
   int16_t results_costs[9];
   int16_t min_cost = INT16_MAX;
   turning_action = 1;
-  best_angle_rad_instruction = 0;
+  best_angle_deg_instruction = 0;
 
   // Loop over nine rays and determine the cost from cost function for all nine rays
   for (int i =0; i <9; i++){
-    costs[i] = cost_function(img, angles[i] * (float)M_PI / 180.0f, entry_point_fractions[i], best_angle_rad);
+    costs[i] = cost_function(img, angles[i] * (float)M_PI / 180.0f, entry_point_fractions[i], best_angle_deg);
   }
 
   int16_t filtered_costs[9];  // Initialise temporary cost matrix in which values from the filtered cost function are stored. 
@@ -92,21 +92,21 @@ struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attri
   }
 
 
-  best_angle_rad = angles[best_index];
+  best_angle_deg = angles[best_index];
  
   uint16_t ratio = (results_costs[4] != 0) ? (uint16_t)(fabs(((double)(results_costs[best_index] - results_costs[4]) / (double)results_costs[4]) * 100.0)) : 0;
 
   if (ratio > 5){
-    best_angle_rad_instruction = best_angle_rad;
+    best_angle_deg_instruction = best_angle_deg;
   } //only change steering angle if change in cost is larger than 30%
-  float local_best_angle_rad = best_angle_rad;
+  float local_best_angle_deg = best_angle_deg;
   float local_entry_point_fraction = entry_point_fractions[best_index];
   pthread_mutex_unlock(&mutex);
   ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-  // draw_best_line(img, local_best_angle_rad, local_entry_point_fraction);
+  // draw_best_line(img, local_best_angle_deg, local_entry_point_fraction);
   
-  fprintf(stderr, "[random_draw1] Min Cost: %d, Ratio: %d Best Angle: %.2f degrees\n, Best Instruction Angle: %.2f degrees\n", min_cost, ratio, best_angle_rad, best_angle_rad_instruction);
+  fprintf(stderr, "[random_draw1] Min Cost: %d, Ratio: %d Best Angle: %.2f degrees\n, Best Instruction Angle: %.2f degrees\n", min_cost, ratio, best_angle_deg, best_angle_deg_instruction);
   
   for (int i = 0; i < 9; i++) {
     fprintf(stderr, "%d", results_costs[i]);
@@ -192,7 +192,7 @@ int16_t compute_texture_score(uint8_t *buffer, int width, int height, int x, int
 return max_y - min_y; 
 }
 
-int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction, float best_angle_rad)
+int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction, float best_angle_deg)
 {
   int16_t num_pixels_line = 0;
   int16_t cost = 0;
@@ -308,7 +308,7 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
 
 
   // Prefer inertia
-  if (alpha == best_angle_rad){
+  if (alpha == best_angle_deg){
     cost -= 10;
   }
 
@@ -351,9 +351,9 @@ void draw_best_line(struct image_t *img, float alpha, float entry_point_fraction
 
 void ray_paths_periodic(void)
 {
-  //fprintf(stderr, "Best Angle: %.2f degrees\n", best_angle_rad * 180.0f / M_PI);
+  //fprintf(stderr, "Best Angle: %.2f degrees\n", best_angle_deg * 180.0f / M_PI);
   pthread_mutex_lock(&mutex);
-  AbiSendMsgVISUAL_DETECTION(3, turning_action, 0, 0, 0, (int32_t) (-0.10f*best_angle_rad_instruction), 0);
+  AbiSendMsgVISUAL_DETECTION(3, turning_action, 0, 0, 0, (int32_t) (-0.10f*best_angle_deg_instruction), 0);
   pthread_mutex_unlock(&mutex);
 }
 
