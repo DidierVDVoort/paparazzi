@@ -88,7 +88,7 @@
   </header>
 
   <init fun="ray_paths_init()"/>
-  <periodic fun="ray_paths_periodic()" freq="50"/>
+  <periodic fun="ray_paths_periodic()" freq="10"/>
   <makefile target="ap|nps">
     <file name="ray_paths.c"/>
   </makefile>

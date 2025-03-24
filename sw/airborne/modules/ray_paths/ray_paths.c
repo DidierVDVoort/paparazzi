@@ -24,6 +24,10 @@ float best_angle_rad_instruction = 0;
 int16_t turning_action = 0;
 uint8_t best_index = 0;
 int16_t turning_threshold = -15;
+int16_t prev1[9] = {0};
+int16_t prev2[9] = {0};
+int16_t prev3[9] = {0};
+int16_t prev4[9] = {0};
 
 // Define cost function
 int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction, float best_angle_rad);
@@ -44,6 +48,7 @@ struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attri
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   pthread_mutex_lock(&mutex);
   int16_t costs[9]; //Initialise cost matrix for 9 rays
+  int16_t results_costs[9];
   int16_t min_cost = INT16_MAX;
   turning_action = 1;
   best_angle_rad_instruction = 0;
@@ -68,21 +73,28 @@ struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attri
       }
   }
   
-  // Copy filtered values back to costs
-  for (int i = 0; i < 9; i++) {
-      costs[i] = filtered_costs[i];
-      if (costs[i] < turning_threshold && turning_action == 1){
-        turning_action = 0;
-      }
-      if (costs[i] < min_cost){
-        min_cost = costs[i];
-        best_index = i; // Best angle is determined based on ray that has the lowest cost
-      }
+
+  
+  
+  for (int i = 0; i < 9; i++){
+    prev4[i] = prev3[i];
+    prev3[i] = prev2[i];
+    prev2[i] = prev1[i];
+    prev1[i] = filtered_costs[i];
+    results_costs[i] = round(prev1[i] + prev2[i] + prev3[i] + prev4[i]/4);
+    if (results_costs[i] < turning_threshold && turning_action == 1){
+      turning_action = 0;
+    }
+    if (results_costs[i] < min_cost){
+      min_cost = results_costs[i];
+      best_index = i; // Best angle is determined based on ray that has the lowest cost
+    }
   }
+
 
   best_angle_rad = angles[best_index];
  
-  uint16_t ratio = (costs[4] != 0) ? (uint16_t)(fabs(((double)(costs[best_index] - costs[4]) / (double)costs[4]) * 100.0)) : 0;
+  uint16_t ratio = (results_costs[4] != 0) ? (uint16_t)(fabs(((double)(results_costs[best_index] - results_costs[4]) / (double)results_costs[4]) * 100.0)) : 0;
 
   if (ratio > 5){
     best_angle_rad_instruction = best_angle_rad;
@@ -97,7 +109,7 @@ struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attri
   fprintf(stderr, "[random_draw1] Min Cost: %d, Ratio: %d Best Angle: %.2f degrees\n, Best Instruction Angle: %.2f degrees\n", min_cost, ratio, best_angle_rad, best_angle_rad_instruction);
   
   for (int i = 0; i < 9; i++) {
-    fprintf(stderr, "%d", costs[i]);
+    fprintf(stderr, "%d", results_costs[i]);
     if (i < 8) { // Add a comma except for the last element
         fprintf(stderr, ", ");
     }

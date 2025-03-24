@@ -107,7 +107,7 @@
     </module>
     <module name="ray_paths">
     	<define name="RAY_PATH_FINDER_CAMERA1" value="front_camera"/>
-      <define name="RAY_PATH_FINDER_FPS1" value="1"/>
+      <define name="RAY_PATH_FINDER_FPS1" value="0"/>
       <define name="RAY_PATH_FINDER_GREEN_DRAW" value="0"/>
       <define name="RAY_PATH_FINDER_ORANGE_DRAW" value="0"/>
       <define name="RAY_PATH_FINDER_PURPLE_DRAW" value="0"/>
