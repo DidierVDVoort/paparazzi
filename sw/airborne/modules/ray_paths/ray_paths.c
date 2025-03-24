@@ -63,10 +63,10 @@ struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attri
   for (int i = 0; i < 9; i++) {
       if (i == 0) {
           // Left boundary: 0.8 * itself
-          filtered_costs[i] = (int16_t)(0.8 * costs[i]);
+          filtered_costs[i] = (int16_t)(0.8 * costs[i] + 0.2 * costs[i + 1]);
       } else if (i == 8) {
           // Right boundary: 0.8 * itself
-          filtered_costs[i] = (int16_t)(0.8 * costs[i]);
+          filtered_costs[i] = (int16_t)(0.8 * costs[i] + 0.2 * costs[i - 1]);
       } else {
           // Middle values: 0.2 * left + 0.6 * itself + 0.2 * right
           filtered_costs[i] = (int16_t)(0.2 * costs[i - 1] + 0.6 * costs[i] + 0.2 * costs[i + 1]);
@@ -98,7 +98,7 @@ struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attri
 
   if (ratio > 5){
     best_angle_rad_instruction = best_angle_rad;
-  } //only change steering angle if change in cost is larger than 30%
+  } //only change steering angle if change in cost is larger than 5%
   float local_best_angle_rad = best_angle_rad;
   float local_entry_point_fraction = entry_point_fractions[best_index];
   pthread_mutex_unlock(&mutex);
@@ -200,35 +200,6 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
   int width = img->w, height = img->h;
   float slope = tan(alpha);
 
-  uint8_t lum_min_gr = green.lum_min;
-  uint8_t lum_max_gr = green.lum_max;
-  uint8_t cb_min_gr = green.cb_min;
-  uint8_t cb_max_gr = green.cb_max;
-  uint8_t cr_min_gr = green.cr_min;
-  uint8_t cr_max_gr = green.cr_max;
-
-  uint8_t lum_min_or = orange.lum_min;
-  uint8_t lum_max_or = orange.lum_max;
-  uint8_t cb_min_or = orange.cb_min;
-  uint8_t cb_max_or = orange.cb_max;
-  uint8_t cr_min_or = orange.cr_min;
-  uint8_t cr_max_or = orange.cr_max;
-
-  uint8_t lum_min_pp = purple.lum_min;
-  uint8_t lum_max_pp = purple.lum_max;
-  uint8_t cb_min_pp = purple.cb_min;
-  uint8_t cb_max_pp = purple.cb_max;
-  uint8_t cr_min_pp = purple.cr_min;
-  uint8_t cr_max_pp = purple.cr_max;
-
-  uint8_t lum_min_br = brown.lum_min;
-  uint8_t lum_max_br = brown.lum_max;
-  uint8_t cb_min_br = brown.cb_min;
-  uint8_t cb_max_br = brown.cb_max;
-  uint8_t cr_min_br = brown.cr_min;
-  uint8_t cr_max_br = brown.cr_max;
-
-
   // Loop through half of x-values
   for (uint16_t x = 0; x < 101; x++) {
     uint8_t *yp, *up, *vp;
@@ -268,9 +239,9 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
       // }
 
       // Decrease cost when green is close to drone
-      if ( (*yp >= lum_min_gr) && (*yp <= lum_max_gr) &&
-      (*up >= cb_min_gr ) && (*up <= cb_max_gr ) &&
-      (*vp >= cr_min_gr ) && (*vp <= cr_max_gr ))
+      if ( (*yp >= green.lum_min) && (*yp <= green.lum_max) &&
+      (*up >= green.cb_min ) && (*up <= green.cb_max ) &&
+      (*vp >= green.cr_min ) && (*vp <= green.cr_max ))
      
       {
         // int texture_score = compute_texture_score(buffer, width, height, x, y);
@@ -279,25 +250,25 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
       } 
       
       // Increase cost when orange is near to drone
-      if ( (*yp >= lum_min_or) && (*yp <= lum_max_or) &&
-      (*up >= cb_min_or ) && (*up <= cb_max_or ) &&
-      (*vp >= cr_min_or ) && (*vp <= cr_max_or )) 
+      if ( (*yp >= orange.lum_min) && (*yp <= orange.lum_max) &&
+      (*up >= orange.cb_min ) && (*up <= orange.cb_max) &&
+      (*vp >= orange.cr_min) && (*vp <= orange.cr_max )) 
       {
         cost += 5*weight;
       } 
 
       // Increase cost when purple is near to drone
-      if ( (*yp >= lum_min_pp) && (*yp <= lum_max_pp) &&
-      (*up >= cb_min_pp ) && (*up <= cb_max_pp ) &&
-      (*vp >= cr_min_pp ) && (*vp <= cr_max_pp )) 
+      if ( (*yp >= purple.lum_min) && (*yp <= purple.lum_max) &&
+      (*up >= purple.cb_min ) && (*up <= purple.cb_max ) &&
+      (*vp >= purple.cr_min ) && (*vp <= purple.cr_max )) 
       {
         cost += 2*weight;
       } 
 
       // Increase cost when brown is near to drone
-      if ( (*yp >= lum_min_br) && (*yp <= lum_max_br) &&
-      (*up >= cb_min_br ) && (*up <= cb_max_br ) &&
-      (*vp >= cr_min_br ) && (*vp <= cr_max_br )) 
+      if ( (*yp >= brown.lum_min) && (*yp <= brown.lum_max) &&
+      (*up >= brown.cb_min ) && (*up <= brown.cb_max ) &&
+      (*vp >= brown.cr_min ) && (*vp <= brown.cr_max )) 
       {
         cost += 2*weight;
       } 
