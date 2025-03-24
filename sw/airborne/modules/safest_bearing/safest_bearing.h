@@ -8,9 +8,6 @@
 extern void safest_bearing_init(void);
 extern void safest_bearing_periodic(void);
 
-extern float y_centre;
-extern int8_t confidence ;
-extern int8_t confidence_th ;
 #endif /* SAFEST_BEARING_H */
 
  

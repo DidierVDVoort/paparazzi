@@ -11,14 +11,16 @@
 #include <stdlib.h>  // Make sure to include this header for malloc
 #include "pthread.h"
 
+static pthread_mutex_t mutex;
+
 // Function prototype
 void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_max_bearing, float (*tensor_41)[1][2]);
 
 float bearings_tensor[1][2];
-float y_centre;
-int8_t confidence = 0;
+int32_t y_centre = 0;
+int16_t confidence = 0;
 float y_centre_buffer = 0;
-int8_t confidence_th = 5;
+int16_t confidence_th = 5;
 
 struct image_t *random_draw1(struct image_t *img, uint8_t camera_id);
 struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute__((unused)))
@@ -36,7 +38,7 @@ void safest_bearing_init(void)
 
 void entry(const float tensor_input_1[1][3][208][96], float tensor_41[1][2]);
 
-void confirm_heading(float y_cen, float y_new, int8_t *confidence)
+void confirm_heading(float y_cen, float y_new, int16_t *confidence)
 {
     float th = 10.0f;
 
@@ -270,8 +272,10 @@ void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_ma
     }
 
     // Calculate the center of the box
+    pthread_mutex_lock(&mutex);
     uint16_t center_x = img->w / 2;
     uint16_t center_y = (min_y + max_y) / 2;
+    pthread_mutex_unlock(&mutex);
 
     if (confidence == 0){
         y_centre_buffer = center_y;
@@ -291,5 +295,8 @@ void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_ma
 
 void safest_bearing_periodic(void)
 {
-
+    // fprintf(stderr, "Best Angle Safest Bearing: %.2f degrees\n", safest_bearing_rad_instruction * 180.0f / M_PI);
+    pthread_mutex_lock(&mutex);
+    AbiSendMsgVISUAL_DETECTION(3, confidence, confidence_th, 0, 0, y_centre, 0);
+    pthread_mutex_unlock(&mutex);
 }

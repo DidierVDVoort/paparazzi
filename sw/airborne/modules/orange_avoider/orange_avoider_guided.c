@@ -73,6 +73,9 @@
  int16_t wait_time = 15;                    // time to wait before changing heading [s]
  float abs_ang = 0;                        // absolute angle of the floor centroid
  float heading = 0;                        // heading of the drone
+ int32_t y_center = 0;                     // middle point of the predicted bearing box
+ int16_t bearing_confidence = 0;                   // confidence of the bearing detection
+ int16_t bearing_confidence_th = 5;                // confidence threshold of the bearing detection
  u_int16_t counter = 0;
  float acceptable_heading_th = 0.10f;
  float turning_spd = 0.0f;
@@ -117,6 +120,17 @@
    floor_count = quality;
    floor_centroid = pixel_y;
  }
+
+ static abi_event bearing_detection_ev;
+ static void bearing_detection_cb(uint8_t __attribute__((unused)) sender_id,
+                                int16_t bearing_confidence_value, int16_t bearing_confidence_threshold,
+                                int16_t __attribute__((unused)) pixel_width, int16_t __attribute__((unused)) pixel_height,
+                                int32_t center_y, int16_t __attribute__((unused)) extra)
+ {
+   y_center = center_y;
+   bearing_confidence = bearing_confidence_value;
+   bearing_confidence_th = bearing_confidence_threshold;
+ }
  
  /*
   * Initialisation function
@@ -130,6 +144,7 @@
    // bind our colorfilter callbacks to receive the color filter outputs
    AbiBindMsgVISUAL_DETECTION(ORANGE_AVOIDER_VISUAL_DETECTION_ID, &color_detection_ev, color_detection_cb);
    AbiBindMsgVISUAL_DETECTION(FLOOR_VISUAL_DETECTION_ID, &floor_detection_ev, floor_detection_cb);
+   AbiBindMsgVISUAL_DETECTION(3, &bearing_detection_ev, bearing_detection_cb);
  }
  
  /*
@@ -190,8 +205,8 @@
    
    
    float x1, y1, x2, y2; // Define variables to hold the ray endpoints
-   float pixel1 = y_centre - 10; // Define the first pixel
-   float pixel2 = y_centre + 10; // Define the second pixel
+   float pixel1 = y_center - 10; // Define the first pixel
+   float pixel2 = y_center + 10; // Define the second pixel
    float ray_length = 0.5; // Define the length of the ray
    float direction;
    
@@ -248,7 +263,7 @@
  
    float speed_sp = fminf(oag_max_speed, 0.2f * obstacle_free_confidence);
  
-   // fprintf(stderr, "Recieved y_direction: %f\n", y_centre);
+   // fprintf(stderr, "Recieved y_direction: %f\n", y_center);
    
  
    switch (navigation_state){
@@ -259,9 +274,9 @@
        } else if (obstacle_free_confidence == 0){
          navigation_state = OBSTACLE_FOUND;
          counter = wait_time;
-       } else if (counter == 0 && confidence >= confidence_th-2) {
-         VERBOSE_PRINT("Confidence %d\n", confidence);
-         VERBOSE_PRINT("Confidence th %d\n", confidence_th);
+       } else if (counter == 0 && bearing_confidence >= bearing_confidence_th-2) {
+         VERBOSE_PRINT("Confidence %d\n", bearing_confidence);
+         VERBOSE_PRINT("Confidence th %d\n", bearing_confidence_th);
          navigation_state = SET_HEADING;
        } else if (counter == 0){
          guidance_h_set_body_vel(0, 0);
@@ -279,17 +294,17 @@
        } else if (obstacle_free_confidence == 0){
          navigation_state = OBSTACLE_FOUND;
          counter = wait_time;
-       } else if (counter == 0 && confidence >= confidence_th-2) {
-         VERBOSE_PRINT("Confidence %d\n", confidence);
-         VERBOSE_PRINT("Confidence th %d\n", confidence_th);
+       } else if (counter == 0 && bearing_confidence >= bearing_confidence_th-2) {
+         VERBOSE_PRINT("Confidence %d\n", bearing_confidence);
+         VERBOSE_PRINT("Confidence th %d\n", bearing_confidence_th);
          navigation_state = SET_HEADING;
        } 
        break;
  
      case SET_HEADING:
-       // abs_ang = (fov_angle/im_width)*y_centre;
+       // abs_ang = (fov_angle/im_width)*y_center;
        
-       abs_ang = atan((im_width - 2*y_centre)/im_width)*tan(fov_angle/2);
+       abs_ang = atan((im_width - 2*y_center)/im_width)*tan(fov_angle/2);
        heading = stateGetNedToBodyEulers_f()->psi - abs_ang;
  
        if (fabs(heading - stateGetNedToBodyEulers_f()->psi) < 0.08){
