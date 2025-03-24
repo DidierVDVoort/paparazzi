@@ -340,7 +340,7 @@ void draw_best_line(struct image_t *img, float alpha, float entry_point_fraction
 
 void ray_paths_periodic(void)
 {
-  //fprintf(stderr, "Best Angle: %.2f degrees\n", best_angle_rad * 180.0f / M_PI);
+  // fprintf(stderr, "Best Angle Ray Paths: %.2f degrees\n", best_angle_rad_instruction * 180.0f / M_PI);
   pthread_mutex_lock(&mutex);
   AbiSendMsgVISUAL_DETECTION(3, turning_action, 0, 0, 0, (int32_t) (-0.10f*best_angle_rad_instruction * 180.0f / M_PI), 0);
   pthread_mutex_unlock(&mutex);

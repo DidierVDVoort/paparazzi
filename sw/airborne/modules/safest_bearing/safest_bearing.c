@@ -17,7 +17,7 @@ float safest_bearing_rad_instruction = 0;
 int16_t turn = 0;
 
 #define N_INTERVALS 9
-#define SLIDING_WINDOW 10
+#define SLIDING_WINDOW 5
 
 int center_y_history[SLIDING_WINDOW] = {0};
 int interval_count[N_INTERVALS] = {0};  // Count predictions per interval
@@ -25,13 +25,13 @@ int history_index = 0;
 
 void update_safest_bearing(int interval);
 int get_bearing_interval(float center_y);
-void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_max_bearing, float (*tensor_41)[1][2]);
+void draw_bearing_box(struct image_t *img, float (*tensor_41)[1][2]);
 
 struct image_t *random_draw(struct image_t *img, uint8_t camera_id);
 struct image_t *random_draw(struct image_t *img, uint8_t camera_id __attribute__((unused)))
 {
     turn = 1;
-    draw_bearing_box(img, 0.3, 0.7, &bearings_tensor);
+    draw_bearing_box(img, &bearings_tensor);
     return img;
 }
 
@@ -43,7 +43,7 @@ void safest_bearing_init(void)
 
 void entry(const float tensor_input_1[1][3][104][48], float tensor_41[1][2]);
 
-void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_max_bearing, float (*tensor_41)[1][2])
+void draw_bearing_box(struct image_t *img, float (*tensor_41)[1][2])
 {
     uint8_t *buffer = img->buf;
 
@@ -167,12 +167,10 @@ void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_ma
 void update_safest_bearing(int interval)
 {
     float dy = (interval + 0.5f) / N_INTERVALS - 0.5f;  
-    float dx = 0.5f;             
-
-    float safest_bearing_rad_instruction = atan2(dy, dx);
+    float dx = 0.5f;
 
     pthread_mutex_lock(&mutex);
-    safest_bearing_rad_instruction = safest_bearing_rad_instruction;
+    safest_bearing_rad_instruction = atan2(dy, dx);
     pthread_mutex_unlock(&mutex);
 
     printf("Safest Bearing Instruction: %.2f degrees\n", safest_bearing_rad_instruction * 180.0f / M_PI);
@@ -185,7 +183,8 @@ int get_bearing_interval(float center_y)
 
 void safest_bearing_periodic(void)
 {
+    // fprintf(stderr, "Best Angle Safest Bearing: %.2f degrees\n", safest_bearing_rad_instruction * 180.0f / M_PI);
     pthread_mutex_lock(&mutex);
-    AbiSendMsgVISUAL_DETECTION(4, turn, 0, 0, 0, (int32_t) (-0.10f * safest_bearing_rad_instruction * 180.0f / M_PI), 0);
+    AbiSendMsgVISUAL_DETECTION(4, turn, 0, 0, 0, (int32_t) (0.10f * safest_bearing_rad_instruction * 180.0f / M_PI), 0);
     pthread_mutex_unlock(&mutex);
 }

@@ -22,7 +22,7 @@ so you have to define which filter to use with the ORANGE_AVOIDER_VISUAL_DETECTI
   </settings>
   
   <dep>
-    <depends>ray_paths</depends>
+    <depends>safest_bearing</depends>
   </dep>
   <header>
     <file name="orange_avoider.h"/>
