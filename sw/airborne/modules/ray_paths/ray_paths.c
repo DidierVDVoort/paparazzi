@@ -80,9 +80,9 @@ struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attri
       }
   }
 
-  best_angle_rad = angles[best_index] * (float)M_PI / 180.0f;
+  best_angle_rad = angles[best_index];
  
-  uint16_t ratio = (costs[4] != 0) ? (uint16_t)(fabs((costs[best_index] - costs[4]) / (double)costs[4]) * 100.0) : 0;
+  uint16_t ratio = (costs[4] != 0) ? (uint16_t)(fabs(((double)(costs[best_index] - costs[4]) / (double)costs[4]) * 100.0)) : 0;
 
   if (ratio > 5){
     best_angle_rad_instruction = best_angle_rad;
@@ -94,7 +94,7 @@ struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attri
 
   // draw_best_line(img, local_best_angle_rad, local_entry_point_fraction);
   
-  fprintf(stderr, "[random_draw1] Min Cost: %d, Best Angle: %.2f degrees\n", min_cost, best_angle_rad_instruction * 180.0f / M_PI);
+  fprintf(stderr, "[random_draw1] Min Cost: %d, Ratio: %d Best Angle: %.2f degrees\n, Best Instruction Angle: %.2f degrees\n", min_cost, ratio, best_angle_rad, best_angle_rad_instruction);
   
   for (int i = 0; i < 9; i++) {
     fprintf(stderr, "%d", costs[i]);
@@ -341,7 +341,7 @@ void ray_paths_periodic(void)
 {
   //fprintf(stderr, "Best Angle: %.2f degrees\n", best_angle_rad * 180.0f / M_PI);
   pthread_mutex_lock(&mutex);
-  AbiSendMsgVISUAL_DETECTION(3, turning_action, 0, 0, 0, (int32_t) (-0.10f*best_angle_rad_instruction * 180.0f / M_PI), 0);
+  AbiSendMsgVISUAL_DETECTION(3, turning_action, 0, 0, 0, (int32_t) (-0.10f*best_angle_rad_instruction), 0);
   pthread_mutex_unlock(&mutex);
 }
 
