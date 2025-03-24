@@ -9,7 +9,7 @@
     <define name="RAY_PATH_FINDER_CAMERA1" value="front_camera|bottom_camera" description="Video device to use"/>
     <define name="RAY_PATH_CALIBRATION_FPS" value="0" description="Desired FPS (0: camera rate)"/>
 
-    <define name="RAY_PATH_FINDER_GREEN_LUM" value="0" description="Green mean luminance"/>
+    <!-- <define name="RAY_PATH_FINDER_GREEN_LUM" value="0" description="Green mean luminance"/>
     <define name="RAY_PATH_FINDER_GREEN_CB" value="0" description="Green mean blue chroma"/>
     <define name="RAY_PATH_FINDER_GREEN_CR" value="0" description="Green mean red chroma"/>
     <define name="RAY_PATH_FINDER_GREEN_MARGIN_LUM" value="0" description="Green luminance margin"/>
@@ -39,7 +39,7 @@
     <define name="RAY_PATH_FINDER_BROWN_MARGIN_LUM" value="0" description="Brown luminance margin"/>
     <define name="RAY_PATH_FINDER_BROWN_MARGIN_CB" value="0" description="Brown blue chroma margin"/>
     <define name="RAY_PATH_FINDER_BROWN_MARGIN_CR" value="0" description="Brown red chroma margin"/>
-    <define name="RAY_PATH_FINDER_BROWN_DRAW" value="FALSE|TRUE" description="Draw brown"/>
+    <define name="RAY_PATH_FINDER_BROWN_DRAW" value="FALSE|TRUE" description="Draw brown"/> -->
   </doc>
 
   <settings>
@@ -47,37 +47,37 @@
       <dl_settings name="RayPathCALIBRATION">
         <dl_setting var="calibration_mode" min="0" step="1" max="1" values="False|True" shortname="calibration enable"/>
 
-        <dl_setting var="green.lum" min="0" step="1" max="255" shortname="green_y"/>
-        <dl_setting var="green.cb" min="0" step="1" max="255" shortname="green_u"/>
-        <dl_setting var="green.cr" min="0" step="1" max="255" shortname="green_v"/>
-        <dl_setting var="green.margin_lum" min="0" step="1" max="255" shortname="green_margin_lum"/>
-        <dl_setting var="green.margin_cb" min="0" step="1" max="255" shortname="green_margin_cb"/>
-        <dl_setting var="green.margin_cr" min="0" step="1" max="255" shortname="green_margin_cr"/>
-        <dl_setting var="green.draw" min="0" step="1" max="1" values="False|True" shortname="draw green"/>
+        <dl_setting var="green.lum_min" min="0" step="1" max="255" shortname="green_lum_min"/>
+        <dl_setting var="green.lum_max" min="0" step="1" max="255" shortname="green_lum_max"/>
+        <dl_setting var="green.cb_min" min="0" step="1" max="255" shortname="green_cb_min"/>
+        <dl_setting var="green.cb_max" min="0" step="1" max="255" shortname="green_cb_max"/>
+        <dl_setting var="green.cr_min" min="0" step="1" max="255" shortname="green_cr_min"/>
+        <dl_setting var="green.cr_max" min="0" step="1" max="255" shortname="green_cr_max"/>
+        <dl_setting var="green.draw" min="0" step="1" max="1" values="False|True" shortname="green_draw"/>
 
-        <dl_setting var="orange.lum" min="0" step="1" max="255" shortname="orange_y"/>
-        <dl_setting var="orange.cb" min="0" step="1" max="255" shortname="orange_u"/>
-        <dl_setting var="orange.cr" min="0" step="1" max="255" shortname="orange_v"/>
-        <dl_setting var="orange.margin_lum" min="0" step="1" max="255" shortname="orange_margin_lum"/>
-        <dl_setting var="orange.margin_cb" min="0" step="1" max="255" shortname="orange_margin_cb"/>
-        <dl_setting var="orange.margin_cr" min="0" step="1" max="255" shortname="orange_margin_cr"/>
-        <dl_setting var="orange.draw" min="0" step="1" max="1" values="False|True" shortname="draw orange"/>
+        <dl_setting var="orange.lum_min" min="0" step="1" max="255" shortname="orange_lum_min"/>
+        <dl_setting var="orange.lum_max" min="0" step="1" max="255" shortname="orange_lum_max"/>
+        <dl_setting var="orange.cb_min" min="0" step="1" max="255" shortname="orange_cb_min"/>
+        <dl_setting var="orange.cb_max" min="0" step="1" max="255" shortname="orange_cb_max"/>
+        <dl_setting var="orange.cr_min" min="0" step="1" max="255" shortname="orange_cr_min"/>
+        <dl_setting var="orange.cr_max" min="0" step="1" max="255" shortname="orange_cr_max"/>
+        <dl_setting var="orange.draw" min="0" step="1" max="1" values="False|True" shortname="orange_draw"/>
 
-        <dl_setting var="purple.lum" min="0" step="1" max="255" shortname="purple_y"/>
-        <dl_setting var="purple.cb" min="0" step="1" max="255" shortname="purple_u"/>
-        <dl_setting var="purple.cr" min="0" step="1" max="255" shortname="purple_v"/>
-        <dl_setting var="purple.margin_lum" min="0" step="1" max="255" shortname="purple_margin_lum"/>
-        <dl_setting var="purple.margin_cb" min="0" step="1" max="255" shortname="purple_margin_cb"/>
-        <dl_setting var="purple.margin_cr" min="0" step="1" max="255" shortname="purple_margin_cr"/>
-        <dl_setting var="purple.draw" min="0" step="1" max="1" values="False|True" shortname="draw purple"/>
+        <dl_setting var="purple.lum_min" min="0" step="1" max="255" shortname="purple_lum_min"/>
+        <dl_setting var="purple.lum_max" min="0" step="1" max="255" shortname="purple_lum_max"/>
+        <dl_setting var="purple.cb_min" min="0" step="1" max="255" shortname="purple_cb_min"/>
+        <dl_setting var="purple.cb_max" min="0" step="1" max="255" shortname="purple_cb_max"/>
+        <dl_setting var="purple.cr_min" min="0" step="1" max="255" shortname="purple_cr_min"/>
+        <dl_setting var="purple.cr_max" min="0" step="1" max="255" shortname="purple_cr_max"/>
+        <dl_setting var="purple.draw" min="0" step="1" max="1" values="False|True" shortname="purple_draw"/>
 
-        <dl_setting var="brown.lum" min="0" step="1" max="255" shortname="brown_y"/>
-        <dl_setting var="brown.cb" min="0" step="1" max="255" shortname="brown_u"/>
-        <dl_setting var="brown.cr" min="0" step="1" max="255" shortname="brown_v"/>
-        <dl_setting var="brown.margin_lum" min="0" step="1" max="255" shortname="brown_margin_lum"/>
-        <dl_setting var="brown.margin_cb" min="0" step="1" max="255" shortname="brown_margin_cb"/>
-        <dl_setting var="brown.margin_cr" min="0" step="1" max="255" shortname="brown_margin_cr"/>
-        <dl_setting var="brown.draw" min="0" step="1" max="1" values="False|True" shortname="draw brown"/>
+        <dl_setting var="brown.lum_min" min="0" step="1" max="255" shortname="brown_lum_min"/>
+        <dl_setting var="brown.lum_max" min="0" step="1" max="255" shortname="brown_lum_max"/>
+        <dl_setting var="brown.cb_min" min="0" step="1" max="255" shortname="brown_cb_min"/>
+        <dl_setting var="brown.cb_max" min="0" step="1" max="255" shortname="brown_cb_max"/>
+        <dl_setting var="brown.cr_min" min="0" step="1" max="255" shortname="brown_cr_min"/>
+        <dl_setting var="brown.cr_max" min="0" step="1" max="255" shortname="brown_cr_max"/>
+        <dl_setting var="brown.draw" min="0" step="1" max="1" values="False|True" shortname="brown_draw"/>
       </dl_settings>
     </dl_settings>
   </settings>

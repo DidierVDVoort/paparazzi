@@ -12,33 +12,33 @@
       <define name="MT9V117_TARGET_FPS" value="1"/>
       
       <!-- Detect color in cyberzoo-->
-      <define name="RAY_PATH_FINDER_GREEN_LUM" value="152"/>
-      <define name="RAY_PATH_FINDER_GREEN_CB" value="89"/>
-      <define name="RAY_PATH_FINDER_GREEN_CR" value="131"/>
-      <define name="RAY_PATH_FINDER_GREEN_MARGIN_LUM" value="35"/>
-      <define name="RAY_PATH_FINDER_GREEN_MARGIN_CB" value="35"/>
-      <define name="RAY_PATH_FINDER_GREEN_MARGIN_CR" value="35"/>
+      <define name="RAY_PATH_FINDER_GREEN_LUM_MIN" value="112" description="Green minimum luminance"/>
+      <define name="RAY_PATH_FINDER_GREEN_LUM_MAX" value="180" description="Green maximum luminance"/>
+      <define name="RAY_PATH_FINDER_GREEN_CB_MIN" value="62" description="Green minimum blue chroma"/>
+      <define name="RAY_PATH_FINDER_GREEN_CB_MAX" value="119" description="Green maximum blue chroma"/>
+      <define name="RAY_PATH_FINDER_GREEN_CR_MIN" value="119" description="Green minimum red chroma"/>
+      <define name="RAY_PATH_FINDER_GREEN_CR_MAX" value="159" description="Green maximum red chroma"/>
 
-      <define name="RAY_PATH_FINDER_ORANGE_LUM" value="204"/>
-      <define name="RAY_PATH_FINDER_ORANGE_CB" value="91"/>
-      <define name="RAY_PATH_FINDER_ORANGE_CR" value="166"/>
-      <define name="RAY_PATH_FINDER_ORANGE_MARGIN_LUM" value="30"/>
-      <define name="RAY_PATH_FINDER_ORANGE_MARGIN_CB" value="30"/>
-      <define name="RAY_PATH_FINDER_ORANGE_MARGIN_CR" value="30"/>
-      
-      <define name="RAY_PATH_FINDER_PURPLE_LUM" value="181"/>
-      <define name="RAY_PATH_FINDER_PURPLE_CB" value="156"/>
-      <define name="RAY_PATH_FINDER_PURPLE_CR" value="130"/>
-      <define name="RAY_PATH_FINDER_PURPLE_MARGIN_LUM" value="20"/>
-      <define name="RAY_PATH_FINDER_PURPLE_MARGIN_CB" value="20"/>
-      <define name="RAY_PATH_FINDER_PURPLE_MARGIN_CR" value="20"/>
-      
-      <define name="RAY_PATH_FINDER_BROWN_LUM" value="52"/>
-      <define name="RAY_PATH_FINDER_BROWN_CB" value="101"/>
-      <define name="RAY_PATH_FINDER_BROWN_CR" value="138"/>
-      <define name="RAY_PATH_FINDER_BROWN_MARGIN_LUM" value="20"/>
-      <define name="RAY_PATH_FINDER_BROWN_MARGIN_CB" value="20"/>
-      <define name="RAY_PATH_FINDER_BROWN_MARGIN_CR" value="20"/>
+      <define name="RAY_PATH_FINDER_ORANGE_LUM_MIN" value="30" description="Orange minimum luminance"/>
+      <define name="RAY_PATH_FINDER_ORANGE_LUM_MAX" value="220" description="Orange maximum luminance"/>
+      <define name="RAY_PATH_FINDER_ORANGE_CB_MIN" value="70" description="Orange minimum blue chroma"/>
+      <define name="RAY_PATH_FINDER_ORANGE_CB_MAX" value="130" description="Orange maximum blue chroma"/>
+      <define name="RAY_PATH_FINDER_ORANGE_CR_MIN" value="150" description="Orange minimum red chroma"/>
+      <define name="RAY_PATH_FINDER_ORANGE_CR_MAX" value="190" description="Orange maximum red chroma"/>
+
+      <define name="RAY_PATH_FINDER_PURPLE_LUM_MIN" value="110" description="Purple minimum luminance"/>
+      <define name="RAY_PATH_FINDER_PURPLE_LUM_MAX" value="201" description="Purple maximum luminance"/>
+      <define name="RAY_PATH_FINDER_PURPLE_CB_MIN" value="130" description="Purple minimum blue chroma"/>
+      <define name="RAY_PATH_FINDER_PURPLE_CB_MAX" value="176" description="Purple maximum blue chroma"/>
+      <define name="RAY_PATH_FINDER_PURPLE_CR_MIN" value="110" description="Purple minimum red chroma"/>
+      <define name="RAY_PATH_FINDER_PURPLE_CR_MAX" value="150" description="Purple maximum red chroma"/>
+
+      <define name="RAY_PATH_FINDER_BROWN_LUM_MIN" value="48" description="Brown minimum luminance"/>
+      <define name="RAY_PATH_FINDER_BROWN_LUM_MAX" value="108" description="Brown maximum luminance"/>
+      <define name="RAY_PATH_FINDER_BROWN_CB_MIN" value="76" description="Brown minimum blue chroma"/>
+      <define name="RAY_PATH_FINDER_BROWN_CB_MAX" value="123" description="Brown maximum blue chroma"/>
+      <define name="RAY_PATH_FINDER_BROWN_CR_MIN" value="120" description="Brown minimum red chroma"/>
+      <define name="RAY_PATH_FINDER_BROWN_CR_MAX" value="168" description="Brown maximum red chroma"/>
       
      
     </target>
@@ -48,33 +48,33 @@
       <define name="LOGGER_FILE_PATH" value="/tmp/paparazzi/log"/>
       
       <!-- Detect orange in simulation-->
-      <define name="RAY_PATH_FINDER_GREEN_LUM" value="88"/>
-      <define name="RAY_PATH_FINDER_GREEN_CB" value="84"/>
-      <define name="RAY_PATH_FINDER_GREEN_CR" value="122"/>
-      <define name="RAY_PATH_FINDER_GREEN_MARGIN_LUM" value="15"/>
-      <define name="RAY_PATH_FINDER_GREEN_MARGIN_CB" value="15"/>
-      <define name="RAY_PATH_FINDER_GREEN_MARGIN_CR" value="15"/>
+      <define name="RAY_PATH_FINDER_GREEN_LUM_MIN" value="73" description="Green minimum luminance"/>
+      <define name="RAY_PATH_FINDER_GREEN_LUM_MAX" value="103" description="Green maximum luminance"/>
+      <define name="RAY_PATH_FINDER_GREEN_CB_MIN" value="69" description="Green minimum blue chroma"/>
+      <define name="RAY_PATH_FINDER_GREEN_CB_MAX" value="99" description="Green maximum blue chroma"/>
+      <define name="RAY_PATH_FINDER_GREEN_CR_MIN" value="107" description="Green minimum red chroma"/>
+      <define name="RAY_PATH_FINDER_GREEN_CR_MAX" value="137" description="Green maximum red chroma"/>
 
-      <define name="RAY_PATH_FINDER_ORANGE_LUM" value="105"/>
-      <define name="RAY_PATH_FINDER_ORANGE_CB" value="100"/>
-      <define name="RAY_PATH_FINDER_ORANGE_CR" value="182"/>
-      <define name="RAY_PATH_FINDER_ORANGE_MARGIN_LUM" value="10"/>
-      <define name="RAY_PATH_FINDER_ORANGE_MARGIN_CB" value="10"/>
-      <define name="RAY_PATH_FINDER_ORANGE_MARGIN_CR" value="10"/>
-      
-      <define name="RAY_PATH_FINDER_PURPLE_LUM" value="181"/>
-      <define name="RAY_PATH_FINDER_PURPLE_CB" value="156"/>
-      <define name="RAY_PATH_FINDER_PURPLE_CR" value="130"/>
-      <define name="RAY_PATH_FINDER_PURPLE_MARGIN_LUM" value="15"/>
-      <define name="RAY_PATH_FINDER_PURPLE_MARGIN_CB" value="15"/>
-      <define name="RAY_PATH_FINDER_PURPLE_MARGIN_CR" value="15"/>
-      
-      <define name="RAY_PATH_FINDER_BROWN_LUM" value="70"/>
-      <define name="RAY_PATH_FINDER_BROWN_CB" value="125"/>
-      <define name="RAY_PATH_FINDER_BROWN_CR" value="125"/>
-      <define name="RAY_PATH_FINDER_BROWN_MARGIN_LUM" value="5"/>
-      <define name="RAY_PATH_FINDER_BROWN_MARGIN_CB" value="5"/>
-      <define name="RAY_PATH_FINDER_BROWN_MARGIN_CR" value="5"/>
+      <define name="RAY_PATH_FINDER_ORANGE_LUM_MIN" value="95" description="Orange minimum luminance"/>
+      <define name="RAY_PATH_FINDER_ORANGE_LUM_MAX" value="115" description="Orange maximum luminance"/>
+      <define name="RAY_PATH_FINDER_ORANGE_CB_MIN" value="90" description="Orange minimum blue chroma"/>
+      <define name="RAY_PATH_FINDER_ORANGE_CB_MAX" value="110" description="Orange maximum blue chroma"/>
+      <define name="RAY_PATH_FINDER_ORANGE_CR_MIN" value="172" description="Orange minimum red chroma"/>
+      <define name="RAY_PATH_FINDER_ORANGE_CR_MAX" value="192" description="Orange maximum red chroma"/>
+
+      <define name="RAY_PATH_FINDER_PURPLE_LUM_MIN" value="166" description="Purple minimum luminance"/>
+      <define name="RAY_PATH_FINDER_PURPLE_LUM_MAX" value="196" description="Purple maximum luminance"/>
+      <define name="RAY_PATH_FINDER_PURPLE_CB_MIN" value="141" description="Purple minimum blue chroma"/>
+      <define name="RAY_PATH_FINDER_PURPLE_CB_MAX" value="171" description="Purple maximum blue chroma"/>
+      <define name="RAY_PATH_FINDER_PURPLE_CR_MIN" value="115" description="Purple minimum red chroma"/>
+      <define name="RAY_PATH_FINDER_PURPLE_CR_MAX" value="145" description="Purple maximum red chroma"/>
+
+      <define name="RAY_PATH_FINDER_BROWN_LUM_MIN" value="65" description="Brown minimum luminance"/>
+      <define name="RAY_PATH_FINDER_BROWN_LUM_MAX" value="75" description="Brown maximum luminance"/>
+      <define name="RAY_PATH_FINDER_BROWN_CB_MIN" value="120" description="Brown minimum blue chroma"/>
+      <define name="RAY_PATH_FINDER_BROWN_CB_MAX" value="130" description="Brown maximum blue chroma"/>
+      <define name="RAY_PATH_FINDER_BROWN_CR_MIN" value="120" description="Brown minimum red chroma"/>
+      <define name="RAY_PATH_FINDER_BROWN_CR_MAX" value="130" description="Brown maximum red chroma"/>
     </target>
     
     <define name="ARRIVED_AT_WAYPOINT" value="0.3"/><!-- Detect arrival at waypoint when within 0.3m -->
@@ -98,9 +98,9 @@
 
     <!-- Video/Camera modules -->
     <module name="bebop_cam"/>
-    <module name="bebop_ae_awb">
+    <!--module name="bebop_ae_awb">
       <define name="CV_AE_AWB_VERBOSE" value="0" />
-    </module>
+    </module-->
     <module name="video_capture">
       <define name="VIDEO_CAPTURE_CAMERA" value="front_camera"/>
       <define name="VIDEO_CAPTURE_FPS" value="1"/>
@@ -166,7 +166,7 @@
     <define name="GAIN_GREEN2" value="10.0"/>
     <define name="GAIN_BLUE" value="12.5"/>
     <define name="GAIN_RED" value="9.0"/>
-    <define name="TARGET_EXPOSURE" value="30" />
+    <define name="TARGET_EXPOSURE" value="20" />
     <!--define name="OUTPUT_SCALER" value="0.25"/>
     <define name="TARGET_FPS" value="20" /-->
   </section>

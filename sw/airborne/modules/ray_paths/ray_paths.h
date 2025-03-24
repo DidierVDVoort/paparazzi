@@ -6,12 +6,12 @@
 
 // Filter Settings
 typedef struct {
-  uint8_t margin_lum;
-  uint8_t margin_cb;
-  uint8_t margin_cr;
-  uint8_t lum;
-  uint8_t cb;
-  uint8_t cr;
+  uint8_t lum_min;
+  uint8_t lum_max;
+  uint8_t cb_min;
+  uint8_t cb_max;
+  uint8_t cr_min;
+  uint8_t cr_max;
   bool draw;
 } ColorSettings;
 

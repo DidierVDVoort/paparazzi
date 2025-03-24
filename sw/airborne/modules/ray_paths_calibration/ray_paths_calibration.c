@@ -34,41 +34,45 @@ void ray_paths_calibration_init(void)
   #define RAY_PATH_CALIBRATION_FPS 0 ///< Default FPS (zero means run at camera fps)
   #endif
   
-    #ifdef RAY_PATH_FINDER_GREEN_LUM
-      green.lum = RAY_PATH_FINDER_GREEN_LUM;
-      green.cb = RAY_PATH_FINDER_GREEN_CB;
-      green.cr = RAY_PATH_FINDER_GREEN_CR;
-      green.margin_lum = RAY_PATH_FINDER_GREEN_MARGIN_LUM;
-      green.margin_cb = RAY_PATH_FINDER_GREEN_MARGIN_CB;
-      green.margin_cr = RAY_PATH_FINDER_GREEN_MARGIN_CR;
-    #endif
+  #ifdef RAY_PATH_FINDER_GREEN_LUM_MIN
+    green.lum_min = RAY_PATH_FINDER_GREEN_LUM_MIN;
+    green.lum_max = RAY_PATH_FINDER_GREEN_LUM_MAX;
+    green.cb_min = RAY_PATH_FINDER_GREEN_CB_MIN;
+    green.cb_max = RAY_PATH_FINDER_GREEN_CB_MAX;
+    green.cr_min = RAY_PATH_FINDER_GREEN_CR_MIN;
+    green.cr_max = RAY_PATH_FINDER_GREEN_CR_MAX;
+    green.draw = RAY_PATH_FINDER_GREEN_DRAW;
+  #endif
 
-    #ifdef RAY_PATH_FINDER_ORANGE_LUM
-      orange.lum = RAY_PATH_FINDER_ORANGE_LUM;
-      orange.cb = RAY_PATH_FINDER_ORANGE_CB;
-      orange.cr = RAY_PATH_FINDER_ORANGE_CR;
-      orange.margin_lum = RAY_PATH_FINDER_ORANGE_MARGIN_LUM;
-      orange.margin_cb = RAY_PATH_FINDER_ORANGE_MARGIN_CB;
-      orange.margin_cr = RAY_PATH_FINDER_ORANGE_MARGIN_CR;
-    #endif
+  #ifdef RAY_PATH_FINDER_ORANGE_LUM_MIN
+    orange.lum_min = RAY_PATH_FINDER_ORANGE_LUM_MIN;
+    orange.lum_max = RAY_PATH_FINDER_ORANGE_LUM_MAX;
+    orange.cb_min = RAY_PATH_FINDER_ORANGE_CB_MIN;
+    orange.cb_max = RAY_PATH_FINDER_ORANGE_CB_MAX;
+    orange.cr_min = RAY_PATH_FINDER_ORANGE_CR_MIN;
+    orange.cr_max = RAY_PATH_FINDER_ORANGE_CR_MAX;
+    orange.draw = RAY_PATH_FINDER_ORANGE_DRAW;
+  #endif
 
-    #ifdef RAY_PATH_FINDER_PURPLE_LUM
-      purple.lum = RAY_PATH_FINDER_PURPLE_LUM;
-      purple.cb = RAY_PATH_FINDER_PURPLE_CB;
-      purple.cr = RAY_PATH_FINDER_PURPLE_CR;
-      purple.margin_lum = RAY_PATH_FINDER_PURPLE_MARGIN_LUM;
-      purple.margin_cb = RAY_PATH_FINDER_PURPLE_MARGIN_CB;
-      purple.margin_cr = RAY_PATH_FINDER_PURPLE_MARGIN_CR;
-    #endif
+  #ifdef RAY_PATH_FINDER_PURPLE_LUM_MIN
+    purple.lum_min = RAY_PATH_FINDER_PURPLE_LUM_MIN;
+    purple.lum_max = RAY_PATH_FINDER_PURPLE_LUM_MAX;
+    purple.cb_min = RAY_PATH_FINDER_PURPLE_CB_MIN;
+    purple.cb_max = RAY_PATH_FINDER_PURPLE_CB_MAX;
+    purple.cr_min = RAY_PATH_FINDER_PURPLE_CR_MIN;
+    purple.cr_max = RAY_PATH_FINDER_PURPLE_CR_MAX;
+    purple.draw = RAY_PATH_FINDER_PURPLE_DRAW;
+  #endif
 
-    #ifdef RAY_PATH_FINDER_BROWN_LUM
-      brown.lum = RAY_PATH_FINDER_BROWN_LUM;
-      brown.cb = RAY_PATH_FINDER_BROWN_CB;
-      brown.cr = RAY_PATH_FINDER_BROWN_CR;
-      brown.margin_lum = RAY_PATH_FINDER_BROWN_MARGIN_LUM;
-      brown.margin_cb = RAY_PATH_FINDER_BROWN_MARGIN_CB;
-      brown.margin_cr = RAY_PATH_FINDER_BROWN_MARGIN_CR;
-    #endif
+  #ifdef RAY_PATH_FINDER_BROWN_LUM_MIN
+    brown.lum_min = RAY_PATH_FINDER_BROWN_LUM_MIN;
+    brown.lum_max = RAY_PATH_FINDER_BROWN_LUM_MAX;
+    brown.cb_min = RAY_PATH_FINDER_BROWN_CB_MIN;
+    brown.cb_max = RAY_PATH_FINDER_BROWN_CB_MAX;
+    brown.cr_min = RAY_PATH_FINDER_BROWN_CR_MIN;
+    brown.cr_max = RAY_PATH_FINDER_BROWN_CR_MAX;
+    brown.draw = RAY_PATH_FINDER_BROWN_DRAW;
+  #endif
 
   cv_add_to_device(&RAY_PATH_FINDER_CAMERA1, image_func, RAY_PATH_CALIBRATION_FPS, 0);
 }
@@ -91,12 +95,12 @@ void show_color_filter(struct image_t *img)
 
   // Precompute min/max values
   for (size_t i = 0; i < color_count; i++) {
-      ranges[i].lum_min = colors[i].lum - colors[i].margin_lum;
-      ranges[i].lum_max = colors[i].lum + colors[i].margin_lum;
-      ranges[i].cb_min = colors[i].cb - colors[i].margin_cb;
-      ranges[i].cb_max = colors[i].cb + colors[i].margin_cb;
-      ranges[i].cr_min = colors[i].cr - colors[i].margin_cr;
-      ranges[i].cr_max = colors[i].cr + colors[i].margin_cr;
+      ranges[i].lum_min = colors[i].lum_min;
+      ranges[i].lum_max = colors[i].lum_max;
+      ranges[i].cb_min = colors[i].cb_min;
+      ranges[i].cb_max = colors[i].cb_max;
+      ranges[i].cr_min = colors[i].cr_min;
+      ranges[i].cr_max = colors[i].cr_max;
       ranges[i].draw = colors[i].draw;
   }
 
