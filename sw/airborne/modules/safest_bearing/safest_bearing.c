@@ -15,7 +15,7 @@ static pthread_mutex_t mutex;
 
 // Function prototype
 void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_max_bearing, float (*tensor_41)[1][2]);
-void confirm_heading(float y_cen, float y_new, int8_t *confidence);
+void confirm_heading(float y_cen, float y_new, int16_t *confidence);
 void draw_circle(uint8_t *buffer, int img_width, int img_height, int center_x, int center_y, int radius, uint8_t y_value, uint8_t u_value, uint8_t v_value);
 
 float bearings_tensor[1][2];
