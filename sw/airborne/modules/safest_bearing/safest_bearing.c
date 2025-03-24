@@ -18,7 +18,7 @@ float bearings_tensor[1][2];
 float y_centre;
 int8_t confidence = 0;
 float y_centre_buffer = 0;
-int8_t confidence_th = 8;
+int8_t confidence_th = 5;
 
 struct image_t *random_draw1(struct image_t *img, uint8_t camera_id);
 struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute__((unused)))
@@ -44,7 +44,7 @@ void confirm_heading(float y_cen, float y_new, int8_t *confidence)
     if (fabsf(y_new - y_cen) < th) {
         *confidence += 1;
     } else {
-        *confidence -= 2;
+        *confidence -= 1;
     }
 
     if (*confidence < 0) {

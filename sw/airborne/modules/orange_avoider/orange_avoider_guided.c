@@ -63,7 +63,7 @@
  };
  
  // define settings
- float oag_color_count_frac = 0.30f;       // obstacle detection threshold as a fraction of total of image
+ float oag_color_count_frac = 0.50f;       // obstacle detection threshold as a fraction of total of image
  float oag_floor_count_frac = 0.01f;       // floor detection threshold as a fraction of total of image
  float oag_max_speed = 0.3f;               // max flight speed [m/s]
  float oag_heading_rate = RadOfDeg(20.f);  // heading change setpoint for avoidance [rad/s]
@@ -259,7 +259,7 @@
        } else if (obstacle_free_confidence == 0){
          navigation_state = OBSTACLE_FOUND;
          counter = wait_time;
-       } else if (counter == 0 && confidence >= confidence_th) {
+       } else if (counter == 0 && confidence >= confidence_th-2) {
          VERBOSE_PRINT("Confidence %d\n", confidence);
          VERBOSE_PRINT("Confidence th %d\n", confidence_th);
          navigation_state = SET_HEADING;
@@ -279,7 +279,7 @@
        } else if (obstacle_free_confidence == 0){
          navigation_state = OBSTACLE_FOUND;
          counter = wait_time;
-       } else if (counter == 0 && confidence >= confidence_th) {
+       } else if (counter == 0 && confidence >= confidence_th-2) {
          VERBOSE_PRINT("Confidence %d\n", confidence);
          VERBOSE_PRINT("Confidence th %d\n", confidence_th);
          navigation_state = SET_HEADING;
@@ -289,7 +289,7 @@
      case SET_HEADING:
        // abs_ang = (fov_angle/im_width)*y_centre;
        
-       abs_ang = atan((im_width - 2*direction)/im_width)*tan(fov_angle/2);
+       abs_ang = atan((im_width - 2*y_centre)/im_width)*tan(fov_angle/2);
        heading = stateGetNedToBodyEulers_f()->psi - abs_ang;
  
        if (fabs(heading - stateGetNedToBodyEulers_f()->psi) < 0.08){
