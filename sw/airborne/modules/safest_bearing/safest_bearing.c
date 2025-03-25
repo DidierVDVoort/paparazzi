@@ -14,7 +14,7 @@
 static pthread_mutex_t mutex;
 
 // Function prototype
-void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_max_bearing, float (*tensor_41)[1][2]);
+void draw_bearing_box(struct image_t *img, float (*tensor_41)[1][2]);
 void confirm_heading(float y_cen, float y_new, int16_t *confidence);
 void draw_circle(uint8_t *buffer, int img_width, int img_height, int center_x, int center_y, int radius, uint8_t y_value, uint8_t u_value, uint8_t v_value);
 
@@ -27,7 +27,7 @@ int16_t confidence_th = 5;
 struct image_t *random_draw1(struct image_t *img, uint8_t camera_id);
 struct image_t *random_draw1(struct image_t *img, uint8_t camera_id __attribute__((unused)))
 {
-    draw_bearing_box(img, 0.3, 0.7, &bearings_tensor);
+    draw_bearing_box(img, &bearings_tensor);
     return img;
 }
 
@@ -38,7 +38,7 @@ void safest_bearing_init(void)
   cv_add_to_device(&COLOR_OBJECT_DETECTOR_CAMERA1, random_draw1, COLOR_OBJECT_DETECTOR_FPS1, 0);
 }
 
-void entry(const float tensor_input_1[1][3][208][96], float tensor_41[1][2]);
+void entry(const float tensor_input_1[1][3][104][48], float tensor_41[1][2]);
 
 void confirm_heading(float y_cen, float y_new, int16_t *confidence)
 {
@@ -120,12 +120,12 @@ void draw_circle(uint8_t *buffer, int img_width, int img_height, int center_x, i
         }
     }
 }
-void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_max_bearing, float (*tensor_41)[1][2])
+void draw_bearing_box(struct image_t *img, float (*tensor_41)[1][2])
 {
     uint8_t *buffer = img->buf;
 
     // Prepare tensor input for the entry function, assuming the tensor is [1][3][208][96]
-    float tensor_input_1[1][3][208][96];  // Adjust the size based on your image size
+    float tensor_input_1[1][3][104][48];  // Adjust the size based on your image size
 
     // Convert YUV image to tensor format
     for (int y = 0; y < img->h; y++) {
@@ -149,7 +149,9 @@ void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_ma
     }
 
     // Call the entry function with the tensor input
+    pthread_mutex_lock(&mutex);
     entry(tensor_input_1, *tensor_41);
+    pthread_mutex_unlock(&mutex);
 
     float min_bearing = (*tensor_41)[0][0];
     float max_bearing = (*tensor_41)[0][1];
@@ -233,7 +235,7 @@ void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_ma
     }
 
     // Draw the left and right borders of the box (hollow)
-    for (uint16_t y = min_y; y <= max_y; y++) {
+    for (uint16_t y = min_y; y < max_y; y++) {
         // Left border (min_x)
         for (uint16_t i = 0; i < thickness; i++) {
             uint8_t *yp_left, *up_left, *vp_left;
@@ -279,6 +281,7 @@ void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_ma
     uint16_t center_y = (min_y + max_y) / 2;
     pthread_mutex_unlock(&mutex);
 
+    pthread_mutex_lock(&mutex);
     if (confidence == 0){
         y_centre_buffer = center_y;
         confidence = 1;
@@ -290,6 +293,7 @@ void draw_bearing_box(struct image_t *img, float norm_min_bearing, float norm_ma
     else {
         confirm_heading(y_centre_buffer, center_y, &confidence);
     }
+    pthread_mutex_unlock(&mutex);
     // Draw a 3-pixel radius circle in the middle of the box
     // draw_circle(buffer, img->w, img->h, center_x, center_y, 3, y_value, u_value, v_value);
     

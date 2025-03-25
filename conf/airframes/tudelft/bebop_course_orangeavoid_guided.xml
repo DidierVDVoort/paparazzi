@@ -126,8 +126,8 @@
   </command_laws>
   
   <section name="BEBOP_FRONT_CAMERA" prefix="MT9F002_">
-    <define name="OUTPUT_HEIGHT" value="208" />
-    <define name="OUTPUT_WIDTH" value="96" />
+    <define name="OUTPUT_HEIGHT" value="104" />
+    <define name="OUTPUT_WIDTH" value="48" />
     <define name="OFFSET_X" value="0.09" />
     <define name="ZOOM" value="1.25"/>
     <define name="GAIN_GREEN1" value="10.0"/>
