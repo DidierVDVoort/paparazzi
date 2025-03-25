@@ -18,106 +18,87 @@ ColorSettings orange = {0, 0, 0, 0, 0, 0, false};
 ColorSettings purple = {0, 0, 0, 0, 0, 0, false};
 ColorSettings brown = {0, 0, 0, 0, 0, 0, false};
 
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+#define DEG_TO_RAD(deg) ((deg) * M_PI / 180.0f)
 
 float best_angle_deg = 0;
 float best_angle_deg_instruction = 0;
 int16_t turning_action = 0;
 uint8_t best_index = 0;
-int16_t turning_threshold = -15;
-int16_t prev1[9] = {0};
-int16_t prev2[9] = {0};
-int16_t prev3[9] = {0};
-int16_t prev4[9] = {0};
+int16_t turning_threshold = -25;
+int8_t ratio_setting = 20;
+int16_t prev_costs[4][9] = {{0}};
 
 // Define cost function
 int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction, float best_angle_deg);
+void compute_filtered_costs(const int16_t *costs, int16_t *filtered_costs);
+void update_prev_costs(int16_t results_costs[9]);
 void draw_best_line(struct image_t *img, float alpha, float entry_point_fraction);
 int16_t compute_texture_score(uint8_t *buffer, int width, int height, int x, int y);
 
-struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id);
+// struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id);
 struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attribute__((unused)))
 {
-  static const float angles[] = {
-    72.65f, 67.38f, 57.99f, 38.66f, 0, -38.66f, -57.99f, -67.38f, -72.65f
-  };
+  static const float angles[] = {72.65f, 67.38f, 57.99f, 38.66f, 0, -38.66f, -57.99f, -67.38f, -72.65f};
+  static const float entry_point_fractions[] = {-0.115f, 0.03846f, 0.1923f, 0.34615f, 0.5f, 0.65385f, 0.8077f, 0.961538f, 1.115f};
 
-  static const float entry_point_fractions[] = {
-    -0.115f, 0.03846f, 0.1923f, 0.34615f, 0.5f, 0.65385f, 0.8077f, 0.961538f, 1.115f
-  };
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   pthread_mutex_lock(&mutex);
-  int16_t costs[9]; //Initialise cost matrix for 9 rays
-  int16_t results_costs[9];
+  int16_t costs[9], filtered_costs[9], results_costs[9]; //Initialise cost matrix for 9 rays
   int16_t min_cost = INT16_MAX;
   turning_action = 1;
   best_angle_deg_instruction = 0;
 
   // Loop over nine rays and determine the cost from cost function for all nine rays
-  for (int i =0; i <9; i++){
-    costs[i] = cost_function(img, angles[i] * (float)M_PI / 180.0f, entry_point_fractions[i], best_angle_deg);
+  for (uint_fast8_t i =0; i < ARRAY_SIZE(angles); i++){
+    costs[i] = cost_function(img, DEG_TO_RAD(angles[i]), entry_point_fractions[i], best_angle_deg);
   }
 
-  int16_t filtered_costs[9];  // Initialise temporary cost matrix in which values from the filtered cost function are stored. 
+  compute_filtered_costs(costs, filtered_costs);
+  update_prev_costs(filtered_costs);
 
-  for (int i = 0; i < 9; i++) {
-      if (i == 0) {
-          // Left boundary: 0.8 * itself
-          filtered_costs[i] = (int16_t)(0.8 * costs[i] + 0.2 * costs[i + 1]);
-      } else if (i == 8) {
-          // Right boundary: 0.8 * itself
-          filtered_costs[i] = (int16_t)(0.8 * costs[i] + 0.2 * costs[i - 1]);
-      } else {
-          // Middle values: 0.2 * left + 0.6 * itself + 0.2 * right
-          filtered_costs[i] = (int16_t)(0.2 * costs[i - 1] + 0.6 * costs[i] + 0.2 * costs[i + 1]);
-      }
-  }
-  
+  for (uint_fast8_t i = 0; i < ARRAY_SIZE(filtered_costs); i++) {
+    results_costs[i] = (prev_costs[0][i] + prev_costs[1][i] + prev_costs[2][i] + prev_costs[3][i]) / 4;
 
-  
-  
-  for (int i = 0; i < 9; i++){
-    prev4[i] = prev3[i];
-    prev3[i] = prev2[i];
-    prev2[i] = prev1[i];
-    prev1[i] = filtered_costs[i];
-    results_costs[i] = round(prev1[i] + prev2[i] + prev3[i] + prev4[i]/4);
-    if (results_costs[i] < turning_threshold && turning_action == 1){
-      turning_action = 0;
+    if (results_costs[i] < turning_threshold && turning_action == 1) {
+        turning_action = 0;
     }
-    if (results_costs[i] < min_cost){
-      min_cost = results_costs[i];
-      best_index = i; // Best angle is determined based on ray that has the lowest cost
+    if (results_costs[i] < min_cost) {
+        min_cost = results_costs[i];
+        best_index = i;
     }
-  }
-
+}
 
   best_angle_deg = angles[best_index];
- 
-  uint16_t ratio = (results_costs[4] != 0) ? (uint16_t)(fabs(((double)(results_costs[best_index] - results_costs[4]) / (double)results_costs[4]) * 100.0)) : 0;
-
-  if (ratio > 5){
+  uint16_t ratio = results_costs[4] != 0 ? (uint16_t)(fabs(((double)(results_costs[best_index] - results_costs[4]) / results_costs[4]) * 100.0)) : 0;
+  if (ratio > ratio_setting) {
     best_angle_deg_instruction = best_angle_deg;
-  } //only change steering angle if change in cost is larger than 30%
-  float local_best_angle_deg = best_angle_deg;
-  float local_entry_point_fraction = entry_point_fractions[best_index];
-  pthread_mutex_unlock(&mutex);
-  ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-  // draw_best_line(img, local_best_angle_deg, local_entry_point_fraction);
-  
-  fprintf(stderr, "[random_draw1] Min Cost: %d, Ratio: %d Best Angle: %.2f degrees\n, Best Instruction Angle: %.2f degrees\n", min_cost, ratio, best_angle_deg, best_angle_deg_instruction);
-  
-  for (int i = 0; i < 9; i++) {
-    fprintf(stderr, "%d", results_costs[i]);
-    if (i < 8) { // Add a comma except for the last element
-        fprintf(stderr, ", ");
-    }
   }
 
-fprintf(stderr, "]\n");  // Close the array and move to a new line
+  pthread_mutex_unlock(&mutex);
 
+  fprintf(stderr, "Min Cost: %d, Ratio: %d Best Angle: %.2f degrees\n", min_cost, ratio, best_angle_deg_instruction);
   return img;
+  }
+
+  void compute_filtered_costs(const int16_t *costs, int16_t *filtered_costs) {
+    for (uint_fast8_t i = 0; i < 9; i++) {
+        if (i == 0) {
+            filtered_costs[i] = (int16_t)(0.8 * costs[i] + 0.2 * costs[i + 1]);
+        } else if (i == 8) {
+            filtered_costs[i] = (int16_t)(0.8 * costs[i] + 0.2 * costs[i - 1]);
+        } else {
+            filtered_costs[i] = (int16_t)(0.2 * costs[i - 1] + 0.6 * costs[i] + 0.2 * costs[i + 1]);
+        }
+    }
+}
+
+void update_prev_costs(int16_t new_costs[9]){
+  for (uint_fast8_t i=0; i < 9; i++){
+    prev_costs[3][i] = prev_costs[2][i];
+    prev_costs[2][i] = prev_costs[1][i];
+    prev_costs[1][i] = prev_costs[0][i];
+    prev_costs[0][i] = new_costs[i];
+  }
 }
 
 void ray_paths_init(void)
@@ -201,26 +182,25 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
   float slope = tan(alpha);
 
   // Loop through half of x-values
-  for (uint16_t x = 0; x < 101; x++) {
-    uint8_t *yp, *up, *vp;
+  for (uint_fast8_t x = 0; x < 101; x++) {
+    float base_y = slope * x + height * entry_point_fraction;
 
-    for (uint16_t offset = 0; offset < 11; offset++) {
-      // Compute the y-value using the slope
-      num_pixels_line += 1;
-      uint16_t y = (uint16_t) roundf(slope * x + img->h * entry_point_fraction) + offset - 5;
-      if (y >= img->h) continue;  // Ensure y is within bounds
+    for (int_fast8_t offset = -5; offset <= 5; offset++) {
+      uint_fast16_t y = (uint_fast16_t)(base_y + offset);
+      if (y >= height) continue;
 
+      num_pixels_line++;
+      uint8_t *up, *vp, *yp;
       // Access the U, Y1, and V values directly
       if (x % 2 == 0) {
         // Even x
         up = &buffer[y * 2 * img->w + 2 * x];      // U
         yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y1
         vp = &buffer[y * 2 * img->w + 2 * x + 2];  // V
-        //yp = &buffer[y * 2 * img->w + 2 * x + 3]; // Y2
+
       } else {
         // Uneven x
         up = &buffer[y * 2 * img->w + 2 * x - 2];  // U
-        //yp = &buffer[y * 2 * img->w + 2 * x - 1]; // Y1
         vp = &buffer[y * 2 * img->w + 2 * x];      // V
         yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y2
       }
@@ -275,12 +255,14 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
     }
   }
   // Normalization
-  cost = round(cost*100/ num_pixels_line);
+  if (num_pixels_line > 0) {
+    cost = (int16_t)roundf(cost * 100.0f / num_pixels_line);
+}
 
 
   // Prefer inertia
   if (alpha == best_angle_deg){
-    cost -= 10;
+    cost -= 20;
   }
 
   
@@ -324,7 +306,7 @@ void ray_paths_periodic(void)
 {
   //fprintf(stderr, "Best Angle: %.2f degrees\n", best_angle_deg * 180.0f / M_PI);
   pthread_mutex_lock(&mutex);
-  AbiSendMsgVISUAL_DETECTION(3, turning_action, 0, 0, 0, (int32_t) (-0.10f*best_angle_deg_instruction), 0);
+  AbiSendMsgVISUAL_DETECTION(3, turning_action, 0, 0, 0, (int32_t) (-best_angle_deg_instruction), 0);
   pthread_mutex_unlock(&mutex);
 }
 

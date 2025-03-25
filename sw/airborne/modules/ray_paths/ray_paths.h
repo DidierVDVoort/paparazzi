@@ -23,6 +23,7 @@ extern ColorSettings brown;
 extern float best_angle_deg;
 extern float best_angle_deg_instruction;
 extern int16_t turning_threshold;
+extern int8_t ratio_setting;
 
 // Module functions
 extern void ray_paths_init(void);

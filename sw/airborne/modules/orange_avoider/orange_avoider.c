@@ -57,7 +57,7 @@ uint8_t turn_around_wait_time = 4u;       // time to wait before turning around 
 // define and initialise global variables
 enum navigation_state_t navigation_state = SAFE;
 int32_t color_count = 0;                // orange color count from color filter for obstacle detection
-int32_t heading_setpoint = 0;
+float heading_setpoint = 0;
 int16_t turn_around = 0;
 float heading_increment = 5.f;          // heading angle increment [deg]
 float maxDistance = 2.25;               // max waypoint displacement [m]
@@ -83,7 +83,7 @@ static void color_detection_cb(uint8_t __attribute__((unused)) sender_id,
                                int16_t __attribute__((unused)) pixel_width, int16_t __attribute__((unused)) pixel_height,
                                int32_t best_heading_angle, int16_t __attribute__((unused)) extra)
 {
-  heading_setpoint = best_heading_angle;
+  heading_setpoint = (float)best_heading_angle * 0.12f;
   turn_around = mighty_mike;
 }
 
@@ -114,7 +114,7 @@ void orange_avoider_periodic(void)
   float moveDistance = 1.f;
 
   // fprintf(stderr, "NAV_STATE: %d, Best Angle: %d degrees\n", navigation_state, heading_setpoint);
-  fprintf(stderr, "Heading setpoint: %d\n", heading_setpoint);
+  fprintf(stderr, "Heading setpoint: %f\n", heading_setpoint);
   fprintf(stderr, "Mighty Mike: %d\n", turn_around);
 
   switch (navigation_state){
