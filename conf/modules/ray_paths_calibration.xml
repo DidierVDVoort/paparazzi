@@ -78,6 +78,14 @@
         <dl_setting var="brown.cr_min" min="0" step="1" max="255" shortname="brown_cr_min"/>
         <dl_setting var="brown.cr_max" min="0" step="1" max="255" shortname="brown_cr_max"/>
         <dl_setting var="brown.draw" min="0" step="1" max="1" values="False|True" shortname="brown_draw"/>
+
+        <dl_setting var="white.lum_min" min="0" step="1" max="255" shortname="white_lum_min"/>
+        <dl_setting var="white.lum_max" min="0" step="1" max="255" shortname="white_lum_max"/>
+        <dl_setting var="white.cb_min" min="0" step="1" max="255" shortname="white_cb_min"/>
+        <dl_setting var="white.cb_max" min="0" step="1" max="255" shortname="white_cb_max"/>
+        <dl_setting var="white.cr_min" min="0" step="1" max="255" shortname="white_cr_min"/>
+        <dl_setting var="white.cr_max" min="0" step="1" max="255" shortname="white_cr_max"/>
+        <dl_setting var="white.draw" min="0" step="1" max="1" values="False|True" shortname="white_draw"/>
       </dl_settings>
     </dl_settings>
   </settings>

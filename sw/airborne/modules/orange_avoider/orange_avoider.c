@@ -127,10 +127,10 @@ void orange_avoider_periodic(void)
         navigation_state = TURN;
         fprintf(stderr, "TURNAROUND\n");
       } else if (heading_setpoint > 0){
-        fprintf(stderr, "RIGHT: Heading setpoint: %d\n", heading_setpoint);
+        fprintf(stderr, "RIGHT: Heading setpoint: %f\n", heading_setpoint);
         navigation_state = RIGHT;
       } else if (heading_setpoint < 0){
-        fprintf(stderr, "LEFT: Heading setpoint: %d\n", heading_setpoint);
+        fprintf(stderr, "LEFT: Heading setpoint: %f\n", heading_setpoint);
         navigation_state = LEFT;
       } else {
         moveWaypointForward(WP_GOAL, moveDistance);

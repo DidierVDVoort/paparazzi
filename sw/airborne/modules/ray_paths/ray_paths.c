@@ -17,6 +17,7 @@ ColorSettings green = {0, 0, 0, 0, 0, 0, false};
 ColorSettings orange = {0, 0, 0, 0, 0, 0, false};
 ColorSettings purple = {0, 0, 0, 0, 0, 0, false};
 ColorSettings brown = {0, 0, 0, 0, 0, 0, false};
+ColorSettings white = {0, 0, 0, 0, 0, 0, false}; // Added white color settings
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define DEG_TO_RAD(deg) ((deg) * M_PI / 180.0f)
@@ -56,23 +57,35 @@ struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attri
   compute_filtered_costs(costs, filtered_costs);
   update_prev_costs(filtered_costs);
 
+  int safe_path_count = 0;
   for (uint_fast8_t i = 0; i < ARRAY_SIZE(filtered_costs); i++) {
     results_costs[i] = (prev_costs[0][i] + prev_costs[1][i] + prev_costs[2][i] + prev_costs[3][i]) / 4;
 
-    if (results_costs[i] < turning_threshold && turning_action == 1) {
-        turning_action = 0;
+    if (results_costs[i] < turning_threshold) {
+        safe_path_count++;
     }
     if (results_costs[i] < min_cost) {
         min_cost = results_costs[i];
         best_index = i;
     }
-}
+  }
+  turning_action = (safe_path_count >= 2) ? 0 : 1;
+
+  // Print the results_costs array
+  fprintf(stderr, "Results Costs: ");
+  for (uint_fast8_t i = 0; i < ARRAY_SIZE(results_costs); i++) {
+    fprintf(stderr, "%d ", results_costs[i]);
+  }
+  fprintf(stderr, "Results Costs angle=0: %d\n", results_costs[4]);
+  fprintf(stderr, "\n");
 
   best_angle_deg = angles[best_index];
-  uint16_t ratio = results_costs[4] != 0 ? (uint16_t)(fabs(((double)(results_costs[best_index] - results_costs[4]) / results_costs[4]) * 100.0)) : 0;
-  if (ratio > ratio_setting) {
+
+  int16_t ratio = (results_costs[4] != 0) ? (int16_t)(fabs(((double)(results_costs[best_index] - results_costs[4]) / results_costs[4]) * 100.0)) : 0;
+  if (ratio == 0 || ratio > ratio_setting) {
     best_angle_deg_instruction = best_angle_deg;
   }
+  
 
   pthread_mutex_unlock(&mutex);
 
@@ -147,6 +160,16 @@ void ray_paths_init(void)
     brown.cr_min = RAY_PATH_FINDER_BROWN_CR_MIN;
     brown.cr_max = RAY_PATH_FINDER_BROWN_CR_MAX;
     brown.draw = RAY_PATH_FINDER_BROWN_DRAW;
+  #endif
+
+  #ifdef RAY_PATH_FINDER_WHITE_LUM_MIN
+    white.lum_min = RAY_PATH_FINDER_WHITE_LUM_MIN;
+    white.lum_max = RAY_PATH_FINDER_WHITE_LUM_MAX;
+    white.cb_min = RAY_PATH_FINDER_WHITE_CB_MIN;
+    white.cb_max = RAY_PATH_FINDER_WHITE_CB_MAX;
+    white.cr_min = RAY_PATH_FINDER_WHITE_CR_MIN;
+    white.cr_max = RAY_PATH_FINDER_WHITE_CR_MAX;
+    white.draw = RAY_PATH_FINDER_WHITE_DRAW;
   #endif
 
   cv_add_to_device(&RAY_PATH_FINDER_CAMERA1, compute_ray_costs, RAY_PATH_FINDER_FPS1, 0);
@@ -252,6 +275,14 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
       {
         cost += 2*weight;
       } 
+
+      // Increase cost when white is near to drone
+      if ( (*yp >= white.lum_min) && (*yp <= white.lum_max) &&
+      (*up >= white.cb_min ) && (*up <= white.cb_max ) &&
+      (*vp >= white.cr_min ) && (*vp <= white.cr_max )) 
+      {
+        cost += 2*weight;
+      } 
     }
   }
   // Normalization
@@ -262,7 +293,7 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
 
   // Prefer inertia
   if (alpha == best_angle_deg){
-    cost -= 20;
+    cost -= 15;
   }
 
   
@@ -309,4 +340,3 @@ void ray_paths_periodic(void)
   AbiSendMsgVISUAL_DETECTION(3, turning_action, 0, 0, 0, (int32_t) (-best_angle_deg_instruction), 0);
   pthread_mutex_unlock(&mutex);
 }
-

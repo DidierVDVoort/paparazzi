@@ -19,6 +19,7 @@ extern ColorSettings green;
 extern ColorSettings orange;
 extern ColorSettings purple;
 extern ColorSettings brown;
+extern ColorSettings white; // Added white color settings
 
 extern float best_angle_deg;
 extern float best_angle_deg_instruction;

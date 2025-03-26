@@ -15,6 +15,7 @@ bool green_draw_calibration = false;
 bool orange_draw_calibration = false;
 bool purple_draw_calibration = false;
 bool brown_draw_calibration = false;
+bool white_draw_calibration = false;
 
 // Function
 void show_color_filter(struct image_t *img);
@@ -74,6 +75,16 @@ void ray_paths_calibration_init(void)
     brown.draw = RAY_PATH_FINDER_BROWN_DRAW;
   #endif
 
+  #ifdef RAY_PATH_FINDER_WHITE_LUM_MIN
+  white.lum_min = RAY_PATH_FINDER_WHITE_LUM_MIN;
+  white.lum_max = RAY_PATH_FINDER_WHITE_LUM_MAX;
+  white.cb_min = RAY_PATH_FINDER_WHITE_CB_MIN;
+  white.cb_max = RAY_PATH_FINDER_WHITE_CB_MAX;
+  white.cr_min = RAY_PATH_FINDER_WHITE_CR_MIN;
+  white.cr_max = RAY_PATH_FINDER_WHITE_CR_MAX;
+  white.draw = RAY_PATH_FINDER_WHITE_DRAW;
+  #endif
+
   cv_add_to_device(&RAY_PATH_FINDER_CAMERA1, image_func, RAY_PATH_CALIBRATION_FPS, 0);
 }
 
@@ -82,7 +93,7 @@ void show_color_filter(struct image_t *img)
   uint8_t *buffer = img->buf;
 
   // Define color settings
-  ColorSettings colors[] = {green, orange, purple, brown};
+  ColorSettings colors[] = {green, orange, purple, brown, white};
   const size_t color_count = sizeof(colors) / sizeof(colors[0]);
 
   // Struct to store computed min/max values

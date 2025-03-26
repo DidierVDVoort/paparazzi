@@ -10,6 +10,7 @@ extern bool green_draw_calibration;
 extern bool orange_draw_calibration;
 extern bool purple_draw_calibration;
 extern bool brown_draw_calibration;
+extern bool white_draw_calibration;
 
 // Module functions
 extern void ray_paths_calibration_init(void);

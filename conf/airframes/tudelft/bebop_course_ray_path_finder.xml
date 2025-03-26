@@ -40,6 +40,13 @@
       <define name="RAY_PATH_FINDER_BROWN_CR_MIN" value="120" description="Brown minimum red chroma"/>
       <define name="RAY_PATH_FINDER_BROWN_CR_MAX" value="168" description="Brown maximum red chroma"/>
       
+      <define name="RAY_PATH_FINDER_WHITE_LUM_MIN" value="150" description="White minimum luminance"/>
+      <define name="RAY_PATH_FINDER_WHITE_LUM_MAX" value="255" description="White maximum luminance"/>
+      <define name="RAY_PATH_FINDER_WHITE_CB_MIN" value="125" description="White minimum blue chroma"/>
+      <define name="RAY_PATH_FINDER_WHITE_CB_MAX" value="132" description="White maximum blue chroma"/>
+      <define name="RAY_PATH_FINDER_WHITE_CR_MIN" value="125" description="White minimum red chroma"/>
+      <define name="RAY_PATH_FINDER_WHITE_CR_MAX" value="132" description="White maximum red chroma"/>
+      
      
     </target>
     <target name="nps" board="pc">
@@ -75,6 +82,13 @@
       <define name="RAY_PATH_FINDER_BROWN_CB_MAX" value="130" description="Brown maximum blue chroma"/>
       <define name="RAY_PATH_FINDER_BROWN_CR_MIN" value="120" description="Brown minimum red chroma"/>
       <define name="RAY_PATH_FINDER_BROWN_CR_MAX" value="130" description="Brown maximum red chroma"/>
+    
+      <define name="RAY_PATH_FINDER_WHITE_LUM_MIN" value="150" description="White minimum luminance"/>
+      <define name="RAY_PATH_FINDER_WHITE_LUM_MAX" value="255" description="White maximum luminance"/>
+      <define name="RAY_PATH_FINDER_WHITE_CB_MIN" value="125" description="White minimum blue chroma"/>
+      <define name="RAY_PATH_FINDER_WHITE_CB_MAX" value="132" description="White maximum blue chroma"/>
+      <define name="RAY_PATH_FINDER_WHITE_CR_MIN" value="125" description="White minimum red chroma"/>
+      <define name="RAY_PATH_FINDER_WHITE_CR_MAX" value="132" description="White maximum red chroma"/>
     </target>
     
     <define name="ARRIVED_AT_WAYPOINT" value="0.3"/><!-- Detect arrival at waypoint when within 0.3m -->
@@ -112,6 +126,7 @@
       <define name="RAY_PATH_FINDER_ORANGE_DRAW" value="0"/>
       <define name="RAY_PATH_FINDER_PURPLE_DRAW" value="0"/>
       <define name="RAY_PATH_FINDER_BROWN_DRAW" value="0"/>
+      <define name="RAY_PATH_FINDER_WHITE_DRAW" value="0"/>
     </module>
     <module name="ray_paths_calibration">
           <define name="RAY_PATH_CALIBRATION_FPS" value="0"/>
