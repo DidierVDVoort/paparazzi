@@ -205,12 +205,20 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
   uint8_t *buffer = img->buf;
   int width = img->w, height = img->h;
   float slope = tan(alpha);
+  uint8_t half_thickness = 5;
+
+  if (alpha == 0.f) {
+    half_thickness = 10;
+  }
+  else {
+    half_thickness = 5;
+  }
 
   // Loop through half of x-values
   for (uint_fast8_t x = 0; x < 101; x++) {
     float base_y = slope * x + height * entry_point_fraction;
 
-    for (int_fast8_t offset = -5; offset <= 5; offset++) {
+    for (int_fast8_t offset = -half_thickness; offset <= half_thickness; offset++) {
       uint_fast16_t y = (uint_fast16_t)(base_y + offset);
       if (y >= height) continue;
 
@@ -284,7 +292,7 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
       (*vp >= white.cr_min ) && (*vp <= white.cr_max )) 
       {
         cost += 2*weight;
-      } 
+      }
     }
   }
   // Normalization
