@@ -220,7 +220,7 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
     float base_y = slope * x + height * entry_point_fraction;
 
     for (int_fast8_t offset = -half_thickness; offset <= half_thickness; offset++) {
-      uint_fast16_t y = (uint_fast16_t)(base_y + offset);
+      int16_t y = (int16_t)(base_y + offset);
       if (y >= height) continue;
 
       num_pixels_line++;
