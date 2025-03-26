@@ -30,6 +30,7 @@ int16_t turning_threshold = -25;
 int8_t ratio_setting = 20;
 int16_t prev_costs[4][9] = {{0}};
 
+
 // Define cost function
 int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction, float best_angle_deg);
 void compute_filtered_costs(const int16_t *costs, int16_t *filtered_costs);
@@ -85,6 +86,7 @@ struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attri
   if (ratio == 0 || ratio > ratio_setting) {
     best_angle_deg_instruction = best_angle_deg;
   }
+  cost_instruction = round((results_costs[3] + results_costs[4] + results_costs[5])/3);
   
 
   pthread_mutex_unlock(&mutex);
@@ -337,6 +339,6 @@ void ray_paths_periodic(void)
 {
   //fprintf(stderr, "Best Angle: %.2f degrees\n", best_angle_deg * 180.0f / M_PI);
   pthread_mutex_lock(&mutex);
-  AbiSendMsgVISUAL_DETECTION(3, turning_action, 0, 0, 0, (int32_t) (-best_angle_deg_instruction), 0);
+  AbiSendMsgVISUAL_DETECTION(3, turning_action, cost_instruction, 0, 0, (int32_t) (-best_angle_deg_instruction), 0);
   pthread_mutex_unlock(&mutex);
 }

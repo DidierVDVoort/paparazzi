@@ -64,6 +64,7 @@ float maxDistance = 2.25;               // max waypoint displacement [m]
 static bool waypoints_set = false;
 static bool out_of_bounds_handled = false;
 float turning_setpoint = 5.f;
+int16_t cost_instruction;
 
 const int16_t max_trajectory_confidence = 5; // number of consecutive negative object detections to be sure we are obstacle free
 
@@ -79,12 +80,13 @@ const int16_t max_trajectory_confidence = 5; // number of consecutive negative o
 #endif
 static abi_event color_detection_ev;
 static void color_detection_cb(uint8_t __attribute__((unused)) sender_id,
-                               int16_t mighty_mike, int16_t __attribute__((unused)) pixel_y,
+                               int16_t mighty_mike, int16_t min_cost,
                                int16_t __attribute__((unused)) pixel_width, int16_t __attribute__((unused)) pixel_height,
                                int32_t best_heading_angle, int16_t __attribute__((unused)) extra)
 {
   heading_setpoint = (float)best_heading_angle * 0.12f;
   turn_around = mighty_mike;
+  cost_instruction = min_cost;
 }
 
 /*
@@ -110,8 +112,21 @@ void orange_avoider_periodic(void)
     return;
   }
 
+  float moveDistance;
+
   // VERBOSE_PRINT("Color_count: %d  threshold: %d state: %d \n", color_count, color_count_threshold, navigation_state);
-  float moveDistance = 1.f;
+  if (cost_instruction < -100){
+    moveDistance = 2.5f;
+    fprintf(stderr, "MOVE DISTANCE: %f\n", moveDistance);
+  }
+  if (cost_instruction >= -100 && cost_instruction < -20){
+    moveDistance = 1.f;
+    fprintf(stderr, "MOVE DISTANCE: %f\n", moveDistance);
+  }
+  else{
+    moveDistance = 0.8f;
+  }
+  
 
   // fprintf(stderr, "NAV_STATE: %d, Best Angle: %d degrees\n", navigation_state, heading_setpoint);
   fprintf(stderr, "Heading setpoint: %f\n", heading_setpoint);
@@ -135,7 +150,7 @@ void orange_avoider_periodic(void)
       } else {
         moveWaypointForward(WP_GOAL, moveDistance);
         moveWaypointForward(WP_RETREAT, -1.0f * moveDistance);
-      }
+}
 
       break;
     case TURN: {
