@@ -38,7 +38,7 @@ void update_prev_costs(int16_t results_costs[9]);
 void draw_best_line(struct image_t *img, float alpha, float entry_point_fraction);
 int16_t compute_texture_score(uint8_t *buffer, int width, int height, int x, int y);
 
-// struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id);
+struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id);
 struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attribute__((unused)))
 {
   static const float angles[] = {72.65f, 67.38f, 57.99f, 38.66f, 0, -38.66f, -57.99f, -67.38f, -72.65f};
@@ -73,12 +73,12 @@ struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attri
   turning_action = (safe_path_count >= 2) ? 0 : 1;
 
   // Print the results_costs array
-  fprintf(stderr, "Results Costs: ");
-  for (uint_fast8_t i = 0; i < ARRAY_SIZE(results_costs); i++) {
-    fprintf(stderr, "%d ", results_costs[i]);
-  }
-  fprintf(stderr, "Results Costs angle=0: %d\n", results_costs[4]);
-  fprintf(stderr, "\n");
+  // fprintf(stderr, "Results Costs: ");
+  // for (uint_fast8_t i = 0; i < ARRAY_SIZE(results_costs); i++) {
+  //   fprintf(stderr, "%d ", results_costs[i]);
+  // }
+  // fprintf(stderr, "Results Costs angle=0: %d\n", results_costs[4]);
+  // fprintf(stderr, "\n");
 
   best_angle_deg = angles[best_index];
 
@@ -91,7 +91,7 @@ struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attri
 
   pthread_mutex_unlock(&mutex);
 
-  fprintf(stderr, "Min Cost: %d, Ratio: %d Best Angle: %.2f degrees\n", min_cost, ratio, best_angle_deg_instruction);
+  // fprintf(stderr, "Min Cost: %d, Ratio: %d Best Angle: %.2f degrees\n", min_cost, ratio, best_angle_deg_instruction);
   return img;
   }
 
@@ -203,7 +203,8 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
   int16_t num_pixels_line = 0;
   int16_t cost = 0;
   uint8_t *buffer = img->buf;
-  int width = img->w, height = img->h;
+  // int width = img->w;
+  int height = img->h;
   float slope = tan(alpha);
 
   // Loop through half of x-values
@@ -211,7 +212,7 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
     float base_y = slope * x + height * entry_point_fraction;
 
     for (int_fast8_t offset = -5; offset <= 5; offset++) {
-      uint_fast16_t y = (uint_fast16_t)(base_y + offset);
+      int16_t y = (int16_t)(base_y + offset);
       if (y >= height) continue;
 
       num_pixels_line++;
@@ -275,7 +276,7 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
       (*up >= brown.cb_min ) && (*up <= brown.cb_max ) &&
       (*vp >= brown.cr_min ) && (*vp <= brown.cr_max )) 
       {
-        cost += 2*weight;
+        cost += 4*weight;
       } 
 
       // Increase cost when white is near to drone

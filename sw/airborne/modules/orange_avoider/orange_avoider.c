@@ -117,11 +117,11 @@ void orange_avoider_periodic(void)
   // VERBOSE_PRINT("Color_count: %d  threshold: %d state: %d \n", color_count, color_count_threshold, navigation_state);
   if (cost_instruction < -100){
     moveDistance = 2.5f;
-    fprintf(stderr, "MOVE DISTANCE: %f\n", moveDistance);
+    // fprintf(stderr, "MOVE DISTANCE: %f\n", moveDistance);
   }
   if (cost_instruction >= -100 && cost_instruction < -20){
     moveDistance = 1.f;
-    fprintf(stderr, "MOVE DISTANCE: %f\n", moveDistance);
+    // fprintf(stderr, "MOVE DISTANCE: %f\n", moveDistance);
   }
   else{
     moveDistance = 0.8f;
@@ -164,7 +164,7 @@ void orange_avoider_periodic(void)
 
       // Check if 2 seconds have passed
       if (turn_around == 0) {
-      fprintf(stderr, "TURNAROUND COMPLETE\n");
+      // fprintf(stderr, "TURNAROUND COMPLETE\n");
       waypoints_set = false; // reset parameter
       navigation_state = SAFE;
       }
