@@ -26,7 +26,8 @@ float best_angle_deg = 0;
 float best_angle_deg_instruction = 0;
 int16_t turning_action = 0;
 uint8_t best_index = 0;
-int16_t turning_threshold = -25;
+int16_t turning_threshold = 0;
+int16_t texture_score_threshold = 40;
 int8_t ratio_setting = 20;
 int16_t prev_costs[4][9] = {{0}};
 
@@ -78,7 +79,7 @@ struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attri
   //   fprintf(stderr, "%d ", results_costs[i]);
   // }
   // fprintf(stderr, "Results Costs angle=0: %d\n", results_costs[4]);
-  // fprintf(stderr, "\n");
+  fprintf(stderr, "\n");
 
   best_angle_deg = angles[best_index];
 
@@ -87,7 +88,7 @@ struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attri
     best_angle_deg_instruction = best_angle_deg;
   }
   cost_instruction = round((results_costs[3] + results_costs[4] + results_costs[5])/3);
-  
+  fprintf(stderr, "Cost Instruction: %d\n", cost_instruction);
 
   pthread_mutex_unlock(&mutex);
 
@@ -203,10 +204,11 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
   int16_t num_pixels_line = 0;
   int16_t cost = 0;
   uint8_t *buffer = img->buf;
-  // int width = img->w;
+  int width = img->w;
   int height = img->h;
   float slope = tan(alpha);
   uint8_t half_thickness = 5;
+  int16_t texture_score_index = 0;
 
   if (alpha == 0.f) {
     half_thickness = 10;
@@ -258,8 +260,6 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
       (*vp >= green.cr_min ) && (*vp <= green.cr_max ))
      
       {
-        // int texture_score = compute_texture_score(buffer, width, height, x, y);
-        // if (texture_score < 20) cost -= weight;
         cost -= weight;
       } 
       
@@ -284,7 +284,7 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
       (*up >= brown.cb_min ) && (*up <= brown.cb_max ) &&
       (*vp >= brown.cr_min ) && (*vp <= brown.cr_max )) 
       {
-        cost += 4*weight;
+        cost += 3*weight;
       } 
 
       // Increase cost when white is near to drone
@@ -294,22 +294,28 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
       {
         cost += 2*weight;
       }
+
+      int texture_score = compute_texture_score(buffer, width, height, x, y);
+        if (texture_score > texture_score_threshold) {
+          cost += weight;
+          texture_score_index += 1;
     }
   }
   // Normalization
+
+fprintf(stderr, "Texture Score: %d\n", texture_score_index);
+
   if (num_pixels_line > 0) {
     cost = (int16_t)roundf(cost * 100.0f / num_pixels_line);
-}
-
+  }
 
   // Prefer inertia
-  if (alpha == best_angle_deg){
+  if (alpha == best_angle_deg) {
     cost -= 15;
   }
 
-  
   return cost;
-  
+}
 }
 
 void draw_best_line(struct image_t *img, float alpha, float entry_point_fraction)
