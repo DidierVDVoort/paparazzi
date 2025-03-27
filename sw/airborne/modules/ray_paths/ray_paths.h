@@ -26,7 +26,7 @@ extern float best_angle_deg_instruction;
 extern int16_t turning_threshold;
 extern int8_t ratio_setting;
 extern int16_t cost_instruction;
-extern int16_t texture_score_threshold;
+
 
 // Module functions
 extern void ray_paths_init(void);

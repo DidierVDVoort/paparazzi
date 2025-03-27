@@ -27,7 +27,6 @@ float best_angle_deg_instruction = 0;
 int16_t turning_action = 0;
 uint8_t best_index = 0;
 int16_t turning_threshold = 0;
-int16_t texture_score_threshold = 40;
 int8_t ratio_setting = 20;
 int16_t prev_costs[4][9] = {{0}};
 
@@ -296,7 +295,7 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
       }
 
       int texture_score = compute_texture_score(buffer, width, height, x, y);
-        if (texture_score > texture_score_threshold) {
+        if (texture_score > 40) {
           cost += weight;
           texture_score_index += 1;
     }

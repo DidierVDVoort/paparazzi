@@ -52,7 +52,7 @@
         <dl_setting var="turning_threshold" min="-20" step="1" max="20" shortname="turning threshold"/>
 
         <dl_setting var="ratio_setting" min="0" step="1" max="50" shortname="ratio setting"/>
-        <dl_setting var="texture_score_threshold" min="0" step="1" max="100" shortname="texture score"/>
+
 
         <dl_setting var="green.lum_min" min="0" step="1" max="255" shortname="green_lum_min"/>
         <dl_setting var="green.lum_max" min="0" step="1" max="255" shortname="green_lum_max"/>
