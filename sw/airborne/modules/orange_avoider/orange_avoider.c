@@ -117,11 +117,11 @@ void orange_avoider_periodic(void)
   // VERBOSE_PRINT("Color_count: %d  threshold: %d state: %d \n", color_count, color_count_threshold, navigation_state);
   if (cost_instruction < -100){
     moveDistance = 2.5f;
-    fprintf(stderr, "MOVE DISTANCE: %f\n", moveDistance);
+    // fprintf(stderr, "MOVE DISTANCE: %f\n", moveDistance);
   }
   if (cost_instruction >= -100 && cost_instruction < -20){
     moveDistance = 1.f;
-    fprintf(stderr, "MOVE DISTANCE: %f\n", moveDistance);
+    // fprintf(stderr, "MOVE DISTANCE: %f\n", moveDistance);
   }
   else{
     moveDistance = 0.8f;
@@ -129,8 +129,8 @@ void orange_avoider_periodic(void)
   
 
   // fprintf(stderr, "NAV_STATE: %d, Best Angle: %d degrees\n", navigation_state, heading_setpoint);
-  fprintf(stderr, "Heading setpoint: %f\n", heading_setpoint);
-  fprintf(stderr, "Mighty Mike: %d\n", turn_around);
+  // fprintf(stderr, "Heading setpoint: %f\n", heading_setpoint);
+  // fprintf(stderr, "Mighty Mike: %d\n", turn_around);
 
   switch (navigation_state){
     case SAFE:
@@ -140,12 +140,12 @@ void orange_avoider_periodic(void)
         navigation_state = OUT_OF_BOUNDS;
       } else if (turn_around){
         navigation_state = TURN;
-        fprintf(stderr, "TURNAROUND\n");
+        // fprintf(stderr, "TURNAROUND\n");
       } else if (heading_setpoint > 0){
-        fprintf(stderr, "RIGHT: Heading setpoint: %f\n", heading_setpoint);
+        // fprintf(stderr, "RIGHT: Heading setpoint: %f\n", heading_setpoint);
         navigation_state = RIGHT;
       } else if (heading_setpoint < 0){
-        fprintf(stderr, "LEFT: Heading setpoint: %f\n", heading_setpoint);
+        // fprintf(stderr, "LEFT: Heading setpoint: %f\n", heading_setpoint);
         navigation_state = LEFT;
       } else {
         moveWaypointForward(WP_GOAL, moveDistance);
@@ -164,7 +164,7 @@ void orange_avoider_periodic(void)
 
       // Check if 2 seconds have passed
       if (turn_around == 0) {
-      fprintf(stderr, "TURNAROUND COMPLETE\n");
+      // fprintf(stderr, "TURNAROUND COMPLETE\n");
       waypoints_set = false; // reset parameter
       navigation_state = SAFE;
       }
@@ -189,7 +189,7 @@ void orange_avoider_periodic(void)
         // (x - x1) * (y2 - y1) - (y - y1) * (x2 - x1)
         // edge one
         if ((WaypointX(WP_TRAJECTORY) - WaypointX(WP_FZ1)) * (WaypointY(WP_FZ2) - WaypointY(WP_FZ1)) - (WaypointY(WP_TRAJECTORY) - WaypointY(WP_FZ1)) * (WaypointX(WP_FZ2) - WaypointX(WP_FZ1)) <= 0) {
-          fprintf(stderr, "EDGE ONE\n");
+          // fprintf(stderr, "EDGE ONE\n");
           float distance_traj_wp1 = sqrtf(powf(WaypointX(WP_TRAJECTORY) - WaypointX(WP_FZ1), 2) + powf(WaypointY(WP_TRAJECTORY) - WaypointY(WP_FZ1), 2));
           float distance_goal_wp1 = sqrtf(powf(WaypointX(WP_GOAL) - WaypointX(WP_FZ1), 2) + powf(WaypointY(WP_GOAL) - WaypointY(WP_FZ1), 2));
           if (distance_goal_wp1 < distance_traj_wp1) {
@@ -201,7 +201,7 @@ void orange_avoider_periodic(void)
 
         // edge two
         if ((WaypointX(WP_TRAJECTORY) - WaypointX(WP_FZ2)) * (WaypointY(WP_FZ3) - WaypointY(WP_FZ2)) - (WaypointY(WP_TRAJECTORY) - WaypointY(WP_FZ2)) * (WaypointX(WP_FZ3) - WaypointX(WP_FZ2)) <= 0) {
-          fprintf(stderr, "EDGE TWO\n");
+          // fprintf(stderr, "EDGE TWO\n");
           float distance_traj_wp2 = sqrtf(powf(WaypointX(WP_TRAJECTORY) - WaypointX(WP_FZ2), 2) + powf(WaypointY(WP_TRAJECTORY) - WaypointY(WP_FZ2), 2));
           float distance_goal_wp2 = sqrtf(powf(WaypointX(WP_GOAL) - WaypointX(WP_FZ2), 2) + powf(WaypointY(WP_GOAL) - WaypointY(WP_FZ2), 2));
           if (distance_goal_wp2 < distance_traj_wp2) {
@@ -212,7 +212,7 @@ void orange_avoider_periodic(void)
         }
         // edge three
         if ((WaypointX(WP_TRAJECTORY) - WaypointX(WP_FZ3)) * (WaypointY(WP_FZ4) - WaypointY(WP_FZ3)) - (WaypointY(WP_TRAJECTORY) - WaypointY(WP_FZ3)) * (WaypointX(WP_FZ4) - WaypointX(WP_FZ3)) <= 0) {
-          fprintf(stderr, "EDGE THREE\n");
+          // fprintf(stderr, "EDGE THREE\n");
           float distance_traj_wp3 = sqrtf(powf(WaypointX(WP_TRAJECTORY) - WaypointX(WP_FZ3), 2) + powf(WaypointY(WP_TRAJECTORY) - WaypointY(WP_FZ3), 2));
           float distance_goal_wp3 = sqrtf(powf(WaypointX(WP_GOAL) - WaypointX(WP_FZ3), 2) + powf(WaypointY(WP_GOAL) - WaypointY(WP_FZ3), 2));
           if (distance_goal_wp3 < distance_traj_wp3) {
@@ -223,7 +223,7 @@ void orange_avoider_periodic(void)
         }
         // edge four
         if ((WaypointX(WP_TRAJECTORY) - WaypointX(WP_FZ4)) * (WaypointY(WP_FZ1) - WaypointY(WP_FZ4)) - (WaypointY(WP_TRAJECTORY) - WaypointY(WP_FZ4)) * (WaypointX(WP_FZ1) - WaypointX(WP_FZ4)) <= 0) {
-          fprintf(stderr, "EDGE FOUR\n");
+          // fprintf(stderr, "EDGE FOUR\n");
           float distance_traj_wp4 = sqrtf(powf(WaypointX(WP_TRAJECTORY) - WaypointX(WP_FZ4), 2) + powf(WaypointY(WP_TRAJECTORY) - WaypointY(WP_FZ4), 2));
           float distance_goal_wp4 = sqrtf(powf(WaypointX(WP_GOAL) - WaypointX(WP_FZ4), 2) + powf(WaypointY(WP_GOAL) - WaypointY(WP_FZ4), 2));
           if (distance_goal_wp4 < distance_traj_wp4) {

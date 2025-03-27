@@ -26,7 +26,7 @@ float best_angle_deg = 0;
 float best_angle_deg_instruction = 0;
 int16_t turning_action = 0;
 uint8_t best_index = 0;
-int16_t turning_threshold = -25;
+int16_t turning_threshold = 0;
 int8_t ratio_setting = 20;
 int16_t prev_costs[4][9] = {{0}};
 
@@ -73,12 +73,12 @@ struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attri
   turning_action = (safe_path_count >= 2) ? 0 : 1;
 
   // Print the results_costs array
-  fprintf(stderr, "Results Costs: ");
-  for (uint_fast8_t i = 0; i < ARRAY_SIZE(results_costs); i++) {
-    fprintf(stderr, "%d ", results_costs[i]);
-  }
-  fprintf(stderr, "Results Costs angle=0: %d\n", results_costs[4]);
-  fprintf(stderr, "\n");
+  // fprintf(stderr, "Results Costs: ");
+  // for (uint_fast8_t i = 0; i < ARRAY_SIZE(results_costs); i++) {
+  //   fprintf(stderr, "%d ", results_costs[i]);
+  // }
+  // fprintf(stderr, "Results Costs angle=0: %d\n", results_costs[4]);
+  // fprintf(stderr, "\n");
 
   best_angle_deg = angles[best_index];
 
@@ -91,7 +91,7 @@ struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attri
 
   pthread_mutex_unlock(&mutex);
 
-  fprintf(stderr, "Min Cost: %d, Ratio: %d Best Angle: %.2f degrees\n", min_cost, ratio, best_angle_deg_instruction);
+  // fprintf(stderr, "Min Cost: %d, Ratio: %d Best Angle: %.2f degrees\n", min_cost, ratio, best_angle_deg_instruction);
   return img;
   }
 
@@ -275,7 +275,7 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
       (*up >= brown.cb_min ) && (*up <= brown.cb_max ) &&
       (*vp >= brown.cr_min ) && (*vp <= brown.cr_max )) 
       {
-        cost += 2*weight;
+        cost += 3*weight;
       } 
 
       // Increase cost when white is near to drone
