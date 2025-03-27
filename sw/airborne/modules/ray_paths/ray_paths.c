@@ -41,8 +41,8 @@ int16_t compute_texture_score(uint8_t *buffer, int width, int height, int x, int
 struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id);
 struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attribute__((unused)))
 {
-  static const float angles[] = {72.65f, 67.38f, 57.99f, 38.66f, 0, -38.66f, -57.99f, -67.38f, -72.65f};
-  static const float entry_point_fractions[] = {-0.115f, 0.03846f, 0.1923f, 0.34615f, 0.5f, 0.65385f, 0.8077f, 0.961538f, 1.115f};
+  static const float angles[] = {74.476f, 69.677f, 60.945f, 41.98f, 0, -41.98f, -60.945f, -69.677f, -74.476f};
+  static const float entry_point_fractions[] = {-1.9231f, -0.01923f, 0.15384f, 0.32692f, 0.5f, 0.67308f, 0.84615f, 1.01923f, 1.19231f};
 
   pthread_mutex_lock(&mutex);
   int16_t costs[9], filtered_costs[9], results_costs[9]; //Initialise cost matrix for 9 rays
@@ -209,13 +209,6 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
   uint8_t half_thickness = 5;
   int16_t texture_score_index = 0;
 
-  if (alpha == 0.f) {
-    half_thickness = 10;
-  }
-  else {
-    half_thickness = 5;
-  }
-
   // Loop through half of x-values
   for (uint_fast8_t x = 0; x < 101; x++) {
     float base_y = slope * x + height * entry_point_fraction;
@@ -283,7 +276,7 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
       (*up >= brown.cb_min ) && (*up <= brown.cb_max ) &&
       (*vp >= brown.cr_min ) && (*vp <= brown.cr_max )) 
       {
-        cost += 3*weight;
+        cost += 2*weight;
       } 
 
       // Increase cost when white is near to drone
@@ -294,15 +287,11 @@ int16_t cost_function(struct image_t *img, float alpha, float entry_point_fracti
         cost += 2*weight;
       }
 
-      int texture_score = compute_texture_score(buffer, width, height, x, y);
-        if (texture_score > 40) {
-          cost += weight;
-          texture_score_index += 1;
+      
     }
   }
   // Normalization
 
-fprintf(stderr, "Texture Score: %d\n", texture_score_index);
 
   if (num_pixels_line > 0) {
     cost = (int16_t)roundf(cost * 100.0f / num_pixels_line);
@@ -315,7 +304,7 @@ fprintf(stderr, "Texture Score: %d\n", texture_score_index);
 
   return cost;
 }
-}
+
 
 void draw_best_line(struct image_t *img, float alpha, float entry_point_fraction)
 {

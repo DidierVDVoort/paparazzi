@@ -115,8 +115,8 @@ void orange_avoider_periodic(void)
   float moveDistance;
 
   // VERBOSE_PRINT("Color_count: %d  threshold: %d state: %d \n", color_count, color_count_threshold, navigation_state);
-  if (cost_instruction < -100){
-    moveDistance = 2.f;
+  if (cost_instruction < -125){
+    moveDistance = 1.6f;
     fprintf(stderr, "MOVE DISTANCE: %f\n", moveDistance);
   }
   else{
