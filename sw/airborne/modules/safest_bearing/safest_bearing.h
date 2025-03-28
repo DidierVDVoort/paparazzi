@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-void entry(const float tensor_input_1[1][3][104][48], float tensor_49[1][2]);
+void entry(const float CNN_input[1][3][104][48], float CNN_output[1][2]);
 
 // Module functions
 extern void safest_bearing_init(void);

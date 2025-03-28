@@ -70,12 +70,12 @@
  float fov_angle = 2.1f;        // field of view angle of the camera [rad]
  float im_width = 104.f;                   // image width in pixels
  float im_height = 48.0f;                  // image height in pixels
- int16_t wait_time = 15;                    // time to wait before changing heading [s]
+ int16_t wait_time = 15;                   // time to wait before changing heading [s]
  float abs_ang = 0;                        // absolute angle of the floor centroid
  float heading = 0;                        // heading of the drone
  int32_t y_center = 0;                     // middle point of the predicted bearing box
- int16_t bearing_confidence = 0;                   // confidence of the bearing detection
- int16_t bearing_confidence_th = 5;                // confidence threshold of the bearing detection
+ int16_t bearing_confidence = 0;           // confidence of the bearing detection
+ int16_t bearing_confidence_th = 5;        // confidence threshold of the bearing detection
  u_int16_t counter = 0;
  float acceptable_heading_th = 0.10f;
  float turning_spd = 0.0f;
@@ -195,7 +195,7 @@
      // VERBOSE_PRINT("X pos with converting: %f\n", conv_position_x);
      // VERBOSE_PRINT("Y pos with converting: %f\n", conv_position_y);
      VERBOSE_PRINT("Inside obstacle zone: %s\n", InsideObstacleZone(conv_position_x, conv_position_y) ? "true" : "false");
-     uint16_t min_y = 0; // Initialize min_y variable
+     //  uint16_t min_y = 0; // Initialize min_y variable
      //VERBOSE_PRINT("Min y: %f\n", (float)min_y);
      //VERBOSE_PRINT("Max y: %f\n", (float)max_y);            
    }
@@ -208,7 +208,7 @@
    float pixel1 = y_center - 10; // Define the first pixel
    float pixel2 = y_center + 10; // Define the second pixel
    float ray_length = 0.5; // Define the length of the ray
-   float direction;
+   //  float direction;
    
    
    void calculateRayEndpoints(float pixel1, float pixel2, float *x1, float *y1, float *x2, float *y2, float ray_length) {
