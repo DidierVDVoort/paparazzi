@@ -163,11 +163,6 @@
    int32_t floor_count_threshold = oag_floor_count_frac * front_camera.output_size.w * front_camera.output_size.h;
    float floor_centroid_frac = floor_centroid / (float)front_camera.output_size.h / 2.f;
  
-   VERBOSE_PRINT("state: %d \n", navigation_state);
-   // VERBOSE_PRINT("Floor count: %d, threshold: %d\n", floor_count, floor_count_threshold);
-   // VERBOSE_PRINT("Floor centroid: %f\n", floor_centroid_frac);
-   VERBOSE_PRINT("Remaining Time before heading change: %d\n", counter);
- 
    // update our safe confidence using color threshold
    if(color_count < color_count_threshold){
      obstacle_free_confidence++;
@@ -335,7 +330,7 @@
        guidance_h_set_heading_rate(avoidance_heading_direction * RadOfDeg(15));
  
        navigation_state = REENTER_ARENA;
-       
+
        break;
 
      case REENTER_ARENA:
