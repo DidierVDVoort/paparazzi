@@ -76,12 +76,10 @@
  int32_t y_center = 0;                     // middle point of the predicted bearing box
  int16_t bearing_confidence = 0;           // confidence of the bearing detection
  int16_t bearing_confidence_th = 5;        // confidence threshold of the bearing detection
- u_int16_t counter = 0;
- float acceptable_heading_th = 0.10f;
- float turning_spd = 0.0f;
- 
+ u_int16_t counter = 0;                    // counter to determine how long before changing heading
+ float acceptable_heading_th = 0.10f;      // acceptable error of heading threshold
+
  void calculateRayEndpoints(float pixel1, float pixel2, float *x1, float *y1, float *x2, float *y2, float ray_length);
-//  int closerToOrigin(float x1, float y1, float x2, float y2, float pixel1, float pixel2, float *direction);
  
  // define and initialise global variables
  enum navigation_state_t navigation_state = SEARCH_FOR_SAFE_HEADING;   // current state in state machine
@@ -121,13 +119,14 @@
    floor_centroid = pixel_y;
  }
 
+ // ABI messages for recieving the safest bearing and the confidence of the bearing
  static abi_event bearing_detection_ev;
  static void bearing_detection_cb(uint8_t __attribute__((unused)) sender_id,
                                 int16_t bearing_confidence_value, int16_t bearing_confidence_threshold,
                                 int16_t __attribute__((unused)) pixel_width, int16_t __attribute__((unused)) pixel_height,
                                 int32_t center_y, int16_t __attribute__((unused)) extra)
  {
-   y_center = center_y;
+   y_center = center_y;       
    bearing_confidence = bearing_confidence_value;
    bearing_confidence_th = bearing_confidence_threshold;
  }
@@ -181,23 +180,15 @@
    float conv_position_x;
    float conv_position_y;
    
+   // Function to update the current position using OPTITRACK (x,y) coordinates
    void updateCurrentPosition(void)
    {
      current_position.x = stateGetPositionEnu_i()->x;
-     current_position.y = stateGetPositionEnu_i()->y;
-     //conv_position_x = POS_FLOAT_OF_BFP(current_position.x);
-     //conv_position_y = POS_FLOAT_OF_BFP(current_position.y);
-   
-     //VERBOSE_PRINT("X pos without converting: %f\n", current_position.x);
-     //VERBOSE_PRINT("Y pos without converting: %f\n", current_position.y);        
+     current_position.y = stateGetPositionEnu_i()->y;   
      conv_position_x = POS_FLOAT_OF_BFP(current_position.x);
      conv_position_y = POS_FLOAT_OF_BFP(current_position.y);
-     // VERBOSE_PRINT("X pos with converting: %f\n", conv_position_x);
-     // VERBOSE_PRINT("Y pos with converting: %f\n", conv_position_y);
-     VERBOSE_PRINT("Inside obstacle zone: %s\n", InsideObstacleZone(conv_position_x, conv_position_y) ? "true" : "false");
-     //  uint16_t min_y = 0; // Initialize min_y variable
-     //VERBOSE_PRINT("Min y: %f\n", (float)min_y);
-     //VERBOSE_PRINT("Max y: %f\n", (float)max_y);            
+
+     VERBOSE_PRINT("Inside obstacle zone: %s\n", InsideObstacleZone(conv_position_x, conv_position_y) ? "true" : "false");      
    }
    
    // Automatically update the current position every iteration
@@ -210,7 +201,8 @@
    float ray_length = 0.5; // Define the length of the ray
    //  float direction;
    
-   
+   /* This function is used to calculate the bearing that is closer to the origin and turns to this direction
+   Helps the drone stay inside the obstance zone while taking turns*/
    void calculateRayEndpoints(float pixel1, float pixel2, float *x1, float *y1, float *x2, float *y2, float ray_length) {
      // Convert pixel values to angles
      float angle1 = (fov_angle / im_width) * pixel1;
@@ -230,27 +222,11 @@
      *y1 = drone_y + ray_length * sinf(abs_angle1);
      *x2 = drone_x + ray_length * cosf(abs_angle2);
      *y2 = drone_y + ray_length * sinf(abs_angle2);
-   
-     // Output the coordinates for debugging
-     // VERBOSE_PRINT("Ray 1 endpoint: (%f, %f)\n", *x1, *y1);
-     // VERBOSE_PRINT("Ray 2 endpoint: (%f, %f)\n", *x2, *y2);
    }
    
-  //  int closerToOrigin(float x1, float y1, float x2, float y2, float pixel1, float pixel2, float *direction) {
-  //    float distance1 = x1 * x1 + y1 * y1;
-  //    float distance2 = x2 * x2 + y2 * y2;
-   
-  //    if (distance1 > distance2) {
-  //      *direction = pixel1;
-  //      return 0;
-  //    } else {
-  //      *direction = pixel2;
-  //      return 1;
-  //    }
-  //  }
-   
    calculateRayEndpoints(pixel1, pixel2, &x1, &y1, &x2, &y2, ray_length);
-  //  closerToOrigin(x1, y1, x2, y2, pixel1, pixel2, &direction);
+
+    // Orange avoider confidence threshold
      // update our safe confidence using color threshold
      if(color_count < color_count_threshold){
        obstacle_free_confidence++;
@@ -263,9 +239,7 @@
  
    float speed_sp = fminf(oag_max_speed, 0.2f * obstacle_free_confidence);
  
-   // fprintf(stderr, "Recieved y_direction: %f\n", y_center);
-   
- 
+    //Navigation State Machine
    switch (navigation_state){
      case SAFE:
      if (!InsideObstacleZone(conv_position_x, conv_position_y) && (floor_count < floor_count_threshold || fabsf(floor_centroid_frac) > 0.12)){
@@ -273,21 +247,22 @@
          counter = wait_time;
        } else if (obstacle_free_confidence == 0){
          navigation_state = OBSTACLE_FOUND;
-         counter = wait_time;
+         counter = wait_time; //resetting counter
        } else if (counter == 0 && bearing_confidence >= bearing_confidence_th-2) {
-         VERBOSE_PRINT("Confidence %d\n", bearing_confidence);
-         VERBOSE_PRINT("Confidence th %d\n", bearing_confidence_th);
+        // The safest bearing is set as the new heading
          navigation_state = SET_HEADING;
        } else if (counter == 0){
+        // waiting for safest bearing
          guidance_h_set_body_vel(0, 0);
          navigation_state = WAIT_FOR_CONFIRMATION;
        }else {
          guidance_h_set_body_vel(speed_sp, 0);
          counter = counter - 1;
        }
- 
        break;
+
      case WAIT_FOR_CONFIRMATION:
+     //wating for the safest bearing
      if (!InsideObstacleZone(conv_position_x, conv_position_y) && (floor_count < floor_count_threshold || fabsf(floor_centroid_frac) > 0.12)){
        navigation_state = OUT_OF_BOUNDS;
          counter = wait_time;
@@ -295,16 +270,13 @@
          navigation_state = OBSTACLE_FOUND;
          counter = wait_time;
        } else if (counter == 0 && bearing_confidence >= bearing_confidence_th-2) {
-         VERBOSE_PRINT("Confidence %d\n", bearing_confidence);
-         VERBOSE_PRINT("Confidence th %d\n", bearing_confidence_th);
          navigation_state = SET_HEADING;
        } 
        break;
  
      case SET_HEADING:
-       // abs_ang = (fov_angle/im_width)*y_center;
-       
-       abs_ang = atan((im_width - 2*y_center)/im_width)*tan(fov_angle/2);
+
+       abs_ang = atan((im_width - 2*y_center)/im_width)*tan(fov_angle/2); //determining the angle of the safest bearing based on pixel location recieved
        heading = stateGetNedToBodyEulers_f()->psi - abs_ang;
  
        if (fabs(heading - stateGetNedToBodyEulers_f()->psi) < 0.08){
@@ -312,20 +284,16 @@
          counter = 5;
          navigation_state = SAFE;
        } else {
-         fprintf(stderr, "Current Heading: %f\n", stateGetNedToBodyEulers_f()->psi);
-         fprintf(stderr, "Rotation Angle: %f\n", abs_ang); 
-         fprintf(stderr, "New Heading: %f\n", heading);  
-         
+          //setting the new heading
          guidance_h_set_heading(heading);
-         // guidance_h_set_heading_rate(heading * 0.17f);
-         guidance_h_set_body_vel(turning_spd , 0);
-               
+         guidance_h_set_body_vel(0 , 0);
          navigation_state = TURN_TO_HEADING;
        }
        break;
  
      case TURN_TO_HEADING:
-       fprintf(stderr,"Heading Error: %f\n",fabsf(stateGetNedToBodyEulers_f()->psi - heading));  
+     // this case is to make sure that the drone has turned to the new heading
+       fprintf(stderr,"Heading Error: %f\n",fabsf(stateGetNedToBodyEulers_f()->psi - heading));  //print the heading error
        if (!InsideObstacleZone(conv_position_x, conv_position_y) && (floor_count < floor_count_threshold || fabsf(floor_centroid_frac) > 0.12)){
          navigation_state = OUT_OF_BOUNDS;
          counter = wait_time;
@@ -333,8 +301,8 @@
          navigation_state = OBSTACLE_FOUND;
          counter = wait_time;
        } else if (fabsf(stateGetNedToBodyEulers_f()->psi - heading) < acceptable_heading_th || 2*3.14159f - fabsf(stateGetNedToBodyEulers_f()->psi - heading) < acceptable_heading_th){
-         counter = wait_time;
-         // guidance_h_set_heading(stateGetNedToBodyEulers_f()->psi);
+         //if the heading error is less than the acceptable threshold, then the drone is at the new heading
+          counter = wait_time;
          navigation_state = SAFE;
        } 
      break;
@@ -345,10 +313,9 @@
  
        // randomly select new search direction
        chooseRandomIncrementAvoidance();
- 
        navigation_state = SEARCH_FOR_SAFE_HEADING;
- 
        break;
+
      case SEARCH_FOR_SAFE_HEADING:
        guidance_h_set_heading_rate(avoidance_heading_direction * oag_heading_rate);
        fprintf(stderr, "Confidence: %d\n", obstacle_free_confidence);
@@ -359,6 +326,7 @@
          navigation_state = SAFE;
        }
        break;
+
      case OUT_OF_BOUNDS:
        // stop
        guidance_h_set_body_vel(0, 0);
@@ -367,8 +335,9 @@
        guidance_h_set_heading_rate(avoidance_heading_direction * RadOfDeg(15));
  
        navigation_state = REENTER_ARENA;
- 
+       
        break;
+
      case REENTER_ARENA:
        // force floor center to opposite side of turn to head back into arena
        if (floor_count >= floor_count_threshold && avoidance_heading_direction * floor_centroid_frac >= 0.f){
