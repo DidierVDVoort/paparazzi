@@ -1,4 +1,4 @@
-// Own header
+// Own header files
 #include "modules/ray_paths/ray_paths.h"
 #include "modules/computer_vision/cv.h"
 #include "modules/core/abi.h"
@@ -10,18 +10,20 @@
 #include <math.h>
 #include "pthread.h"
 
+// Mutex for thread safety
 static pthread_mutex_t mutex;
 
-// Filter Settings
+// Colour Filter Settings for detecting obstacles and safe zones
 ColorSettings green = {0, 0, 0, 0, 0, 0, false};
 ColorSettings orange = {0, 0, 0, 0, 0, 0, false};
 ColorSettings purple = {0, 0, 0, 0, 0, 0, false};
 ColorSettings brown = {0, 0, 0, 0, 0, 0, false};
-ColorSettings white = {0, 0, 0, 0, 0, 0, false}; // Added white color settings
+ColorSettings white = {0, 0, 0, 0, 0, 0, false}; 
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define DEG_TO_RAD(deg) ((deg) * M_PI / 180.0f)
 
+// Global variables 
 float best_angle_deg = 0;
 float best_angle_deg_instruction = 0;
 int16_t turning_action = 0;
@@ -31,13 +33,14 @@ int8_t ratio_setting = 20;
 int16_t prev_costs[4][9] = {{0}};
 
 
-// Define cost function
+// DFunction Declaration
 int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction, float best_angle_deg);
 void compute_filtered_costs(const int16_t *costs, int16_t *filtered_costs);
 void update_prev_costs(int16_t results_costs[9]);
 void draw_best_line(struct image_t *img, float alpha, float entry_point_fraction);
 int16_t compute_texture_score(uint8_t *buffer, int width, int height, int x, int y);
 
+// Computes ray costs based on YUV pixel values
 struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id);
 struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attribute__((unused)))
 {
@@ -71,17 +74,9 @@ struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attri
     }
   }
   turning_action = (safe_path_count >= 2) ? 0 : 1;
-
-  // Print the results_costs array
-  // fprintf(stderr, "Results Costs: ");
-  // for (uint_fast8_t i = 0; i < ARRAY_SIZE(results_costs); i++) {
-  //   fprintf(stderr, "%d ", results_costs[i]);
-  // }
-  // fprintf(stderr, "Results Costs angle=0: %d\n", results_costs[4]);
-  fprintf(stderr, "\n");
-
   best_angle_deg = angles[best_index];
 
+  // Adjust angle if respective best cost in comparison to the previous best cost is too high to cost of going straight
   int16_t ratio = (results_costs[4] != 0) ? (int16_t)(fabs(((double)(results_costs[best_index] - results_costs[4]) / results_costs[4]) * 100.0)) : 0;
   if (ratio == 0 || ratio > ratio_setting) {
     best_angle_deg_instruction = best_angle_deg;
@@ -95,6 +90,7 @@ struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attri
   return img;
   }
 
+    // Function that applies smoothing function 
   void compute_filtered_costs(const int16_t *costs, int16_t *filtered_costs) {
     for (uint_fast8_t i = 0; i < 9; i++) {
         if (i == 0) {
@@ -107,6 +103,7 @@ struct image_t *compute_ray_costs(struct image_t *img, uint8_t camera_id __attri
     }
 }
 
+// Function that updates the previous costs
 void update_prev_costs(int16_t new_costs[9]){
   for (uint_fast8_t i=0; i < 9; i++){
     prev_costs[3][i] = prev_costs[2][i];
@@ -177,6 +174,7 @@ void ray_paths_init(void)
   cv_add_to_device(&RAY_PATH_FINDER_CAMERA1, compute_ray_costs, RAY_PATH_FINDER_FPS1, 0);
 }
 
+// Function that computes the texture score for an individual pixel
 int16_t compute_texture_score(uint8_t *buffer, int width, int height, int x, int y){
   int window_size = 3;
   int half_window = window_size / 2;
@@ -198,6 +196,7 @@ int16_t compute_texture_score(uint8_t *buffer, int width, int height, int x, int
 return max_y - min_y; 
 }
 
+// Function that computes the cost function for a given frame and ray structure
 int16_t cost_function(struct image_t *img, float alpha, float entry_point_fraction, float best_angle_deg)
 {
   int16_t num_pixels_line = 0;
